@@ -1,0 +1,82 @@
+{
+  "projectType": "saas",
+  "projectName": "BLACC Community Platform",
+  "projectDescription": "A community platform for The Black Coder Community (BLACC) featuring live events, video submissions, and Discord integration.",
+  "theme": "almond",
+  "primaryColor": "#7c7c7c",
+  "lightColor": "#050505",
+  "darkColor": "#dadada",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/community",
+              "features/live-events",
+              "features/video-submissions",
+              "features/discord-integration"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/setup",
+              "development/architecture",
+              "development/components",
+              "development/firebase-integration"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/overview",
+              "deployment/environment-variables",
+              "deployment/vercel"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Components",
+        "groups": [
+          {
+            "group": "UI Components",
+            "pages": [
+              "components/atoms",
+              "components/molecules",
+              "components/styling"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Community landing page with Discord integration",
+    "Live events page with upcoming and past events display",
+    "Video upload system for YouTube submissions",
+    "Firebase backend for storage and data management",
+    "Responsive design with Emotion-styled components",
+    "Discord widget for real-time community engagement"
+  ],
+  "publicApiSurface": [
+    "Pages: / (home), /live (events), /upload (submissions)",
+    "uploadVideoToStorage() - Upload videos to Firebase Storage",
+    "LiveEvents component - Display upcoming community events",
+    "PastEvents component - Display historical events",
+    "VideoContainer component - Video upload interface",
+    "FormSubmission component - Submission form handling",
+    "Toast component - User notifications",
+    "Event component - Individual event display"
+  ]
+}
