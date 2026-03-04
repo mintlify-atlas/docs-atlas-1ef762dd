@@ -1,0 +1,399 @@
+---
+title: Component structure
+description: Explore the atomic design pattern and reusable components in the BLACC Community Platform
+---
+
+The BLACC Community Platform follows an atomic design pattern, organizing components into atoms (simple elements) and molecules (composite components).
+
+## Component architecture
+
+Components are organized into two categories:
+
+```
+components/
+├── atoms/           # Basic building blocks
+│   ├── Event.js
+│   ├── Header.js
+│   └── Toast.js
+└── molecules/       # Composite components
+    ├── FormSubmission.js
+    ├── LiveEvents.js
+    ├── LivestreamContainer.js
+    ├── PastEvents.js
+    ├── UpcomingEvent.js
+    └── VideoContainer.js
+```
+
+<Note>
+  This structure follows the [Atomic Design methodology](https://bradfrost.com/blog/post/atomic-web-design/) where atoms are simple UI elements and molecules combine multiple atoms.
+</Note>
+
+## Atoms
+
+Atoms are the smallest, most reusable components that cannot be broken down further.
+
+### Header
+
+The navigation header appears on all pages via `_app.js`:
+
+**Location**: `components/atoms/Header.js`
+
+**Features**:
+- Responsive navigation with mobile hamburger menu
+- Active route highlighting using `useRouter`
+- Sticky positioning with backdrop blur effect
+- External links to GitHub and Buy Me a Coffee
+
+```javascript components/atoms/Header.js
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+
+export default function Header() {
+  const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    setShowMenu(false);
+  }, [router]);
+
+  return (
+    <Wrapper>
+      <Container>
+        <Link href="/">
+          <Brand>
+            <BoringImg src="/blacc.png" alt="BLACC logo" width="69" height="69" />
+            <Name>BLACC</Name>
+          </Brand>
+        </Link>
+        <Links>
+          <Link href="/live">
+            <LinkItem active={router.route === '/live'}>Live Events</LinkItem>
+          </Link>
+          <MenuIcon className="material-icons" onClick={() => setShowMenu(!showMenu)}>
+            menu
+          </MenuIcon>
+        </Links>
+      </Container>
+    </Wrapper>
+  );
+}
+```
+
+**Key patterns**:
+- Uses `useRouter` to highlight the active page
+- Menu closes automatically when route changes
+- Conditional styling based on `active` prop
+
+### Event
+
+Displays individual event cards with thumbnail, title, date, and call-to-action:
+
+**Location**: `components/atoms/Event.js`
+
+```javascript components/atoms/Event.js
+export default function Event({ img, title, date, url, live }) {
+  return (
+    <Container>
+      <Img>
+        <Image src={img} layout='fill' objectFit='cover' />
+      </Img>
+      <Details>
+        <Metadata>
+          <Title>{title}</Title>
+          {url && <Date>{date}</Date>}
+        </Metadata>
+        {!url ? (
+          <CTA>{date}</CTA>
+        ) : !live ? (
+          <CTA href={url} target='_blank'>
+            VIEW RECORDING
+          </CTA>
+        ) : (
+          <CTA href={url} target='_blank'>
+            WATCH LIVE
+          </CTA>
+        )}
+      </Details>
+    </Container>
+  );
+}
+```
+
+**Props**:
+- `img` - Event thumbnail image path
+- `title` - Event name
+- `date` - Event date or scheduled time
+- `url` - Link to stream or recording (optional)
+- `live` - Boolean indicating if event is currently live
+
+**Conditional rendering**:
+- No URL: Shows date as static text
+- URL + not live: Shows "VIEW RECORDING" button
+- URL + live: Shows "WATCH LIVE" button
+
+### Toast
+
+Displays temporary success or error notifications:
+
+**Location**: `components/atoms/Toast.js`
+
+```javascript components/atoms/Toast.js
+function Toast({ error, show }) {
+  return (
+    <Container show={show || error} isError={error}>
+      <Message>{error || `We'll follow up with you soon`}</Message>
+    </Container>
+  );
+}
+```
+
+**Features**:
+- Slides up from bottom when `show` is true
+- Green background for success, red for errors
+- Auto-dismisses after timeout (controlled by parent)
+
+<Tip>
+  The Toast component uses CSS transforms for smooth animations: `translateY(${show ? '0' : '100'}px)`
+</Tip>
+
+## Molecules
+
+Molecules combine multiple atoms to create more complex components.
+
+### FormSubmission
+
+A comprehensive form for submitting videos to the community YouTube channel:
+
+**Location**: `components/molecules/FormSubmission.js`
+
+**Features**:
+- Text inputs for username and title
+- Textarea for description
+- Tag selection from predefined list
+- Progress bar during upload
+- Success indicator on completion
+
+```javascript components/molecules/FormSubmission.js
+const FormSubmission = ({
+  setTitle,
+  setUsername,
+  username,
+  setDescription,
+  chosenTags,
+  setChosenTags,
+  onSubmit,
+  progress,
+  title,
+  description,
+}) => {
+  const handleTags = (tag) => {
+    if (chosenTags.includes(tag))
+      setChosenTags(chosenTags.filter((el) => el !== tag));
+    else setChosenTags([...chosenTags, tag]);
+  };
+  
+  return (
+    <FormSubmissionUI
+      setTitle={setTitle}
+      setDescription={setDescription}
+      chosenTags={chosenTags}
+      handleTags={handleTags}
+      progress={progress}
+      onSubmit={onSubmit}
+      // ...
+    />
+  );
+};
+```
+
+**Tag selection logic**:
+- Tags are imported from `constants.js`
+- Clicking a tag toggles selection
+- Visual feedback shows selected tags
+
+```javascript constants.js
+export const tags = [
+  'user experience',
+  'javascript',
+  'react',
+  'python',
+  'node.js',
+  'graphql',
+  // ... 30 total tags
+];
+```
+
+### LiveEvents
+
+Displays upcoming community events:
+
+**Location**: `components/molecules/LiveEvents.js`
+
+```javascript components/molecules/LiveEvents.js
+export default function LiveEvents() {
+  return (
+    <Container>
+      <Title>Upcoming Events</Title>
+      <Wrapper>
+        <Event
+          img='/twitch.PNG'
+          title='Building with the Twitch API and Github Actions'
+          date='May 8th, 2021'
+          url='https://www.twitch.tv/blacc_xyz'
+          live
+        />
+      </Wrapper>
+    </Container>
+  );
+}
+```
+
+<Note>
+  In production, events would be fetched from Firestore. The current implementation uses static data for demonstration.
+</Note>
+
+### VideoContainer
+
+Handles video file upload with preview:
+
+**Location**: `components/molecules/VideoContainer.js`
+
+**Features**:
+- Drag and drop support
+- File type validation
+- Video preview before upload
+- File size display
+
+## Styling patterns
+
+All components use Emotion's `styled` API for CSS-in-JS:
+
+### Responsive design
+
+```javascript
+const Container = styled.div`
+  padding: 64px;
+  
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+`;
+```
+
+### Prop-based styling
+
+```javascript
+const Tag = styled.p`
+  ${({ chosen }) =>
+    chosen
+      ? `background: #000; color: #fff;`
+      : `background: #eeeeee; color: #525456;`}
+`;
+```
+
+### Hover effects
+
+```javascript
+const CTA = styled.a`
+  transition: all 0.2s;
+  border: 1px solid #fff;
+  
+  &:hover {
+    color: #000;
+    background: #fff;
+  }
+`;
+```
+
+## State management
+
+Components use React hooks for local state:
+
+### useState for form data
+
+```javascript pages/upload.js
+const [video, setVideo] = useState(null);
+const [username, setUsername] = useState('');
+const [title, setTitle] = useState('');
+const [progress, setProgress] = useState(0);
+```
+
+### useEffect for side effects
+
+```javascript pages/index.js
+const [windowHeight, setWindowHeight] = useState(0);
+
+useEffect(() => {
+  setWindowHeight(window.innerHeight);
+}, []);
+```
+
+### useRouter for navigation
+
+```javascript components/atoms/Header.js
+const router = useRouter();
+
+useEffect(() => {
+  setShowMenu(false);  // Close menu on route change
+}, [router]);
+```
+
+## Component composition
+
+Molecules compose atoms to build features:
+
+```javascript pages/live.js
+import LiveEvents from '../components/molecules/LiveEvents';
+import PastEvents from '../components/molecules/PastEvents';
+
+export default function Live() {
+  return (
+    <Container>
+      <Wrapper>
+        <LiveEvents />    {/* Molecule containing Event atoms */}
+        <PastEvents />    {/* Molecule containing Event atoms */}
+      </Wrapper>
+    </Container>
+  );
+}
+```
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Component naming">
+    - Use PascalCase for component files and exports
+    - Name styled components semantically (`Container`, `Wrapper`, `Title`)
+    - Keep component files focused on a single responsibility
+  </Accordion>
+  
+  <Accordion title="Props and validation">
+    - Destructure props in function signature
+    - Use clear, descriptive prop names
+    - Provide default values where appropriate
+    - Document required props in comments
+  </Accordion>
+  
+  <Accordion title="Styling organization">
+    - Define styled components at the top of the file
+    - Group related styled components together
+    - Use media queries consistently at 600px breakpoint
+    - Keep animations smooth with `transition` properties
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  When creating new components, follow the atomic pattern: build simple atoms first, then compose them into molecules.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Firebase integration" icon="fire" href="/development/firebase-integration">
+    Learn how components interact with Firebase services
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="https://github.com/BLACC-Smith/next">
+    Learn how to contribute components to the codebase
+  </Card>
+</CardGroup>

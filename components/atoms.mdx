@@ -1,0 +1,233 @@
+---
+title: Atomic components
+description: Learn about the foundational atomic components that power the BLACC Community Platform UI
+---
+
+Atomic components are the foundational building blocks of the BLACC Community Platform. These self-contained, reusable components handle specific UI responsibilities and can be composed together to build more complex interfaces.
+
+## Event
+
+The `Event` component displays event information with an image, title, date, and call-to-action button. It adapts its CTA based on the event state (upcoming, live, or past).
+
+### Usage
+
+```jsx
+import Event from '../components/atoms/Event';
+
+function EventList() {
+  return (
+    <Event
+      img="/event-image.png"
+      title="Building with the Twitch API"
+      date="May 8th, 2021"
+      url="https://www.twitch.tv/blacc_xyz"
+      live={true}
+    />
+  );
+}
+```
+
+### Props
+
+<ResponseField name="img" type="string" required>
+  Path to the event image. Used with Next.js Image component for optimized loading.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  The event title displayed prominently in the card.
+</ResponseField>
+
+<ResponseField name="date" type="string" required>
+  Date string for the event. Displayed as the CTA text if no URL is provided.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Link to the event stream or recording. If not provided, the date is shown as a non-clickable CTA.
+</ResponseField>
+
+<ResponseField name="live" type="boolean">
+  When `true` and a URL is provided, displays "WATCH LIVE" CTA. Otherwise shows "VIEW RECORDING".
+</ResponseField>
+
+### Styled components
+
+The Event component uses Emotion styled components for its layout:
+
+- **Container**: Responsive flex layout with rounded corners and translucent background
+- **Img**: Fixed-size image container (240x180px) that scales to full width on mobile
+- **Details**: Grid layout for title, date, and CTA button
+- **Title**: Large heading text (32px desktop, 24px mobile)
+- **Date**: Metadata text displayed below the title
+- **CTA**: Interactive button/link with hover effects
+
+<Note>
+  The component automatically adjusts its layout for mobile screens (max-width: 600px), switching from horizontal to vertical stacking.
+</Note>
+
+### Reference
+
+See the full implementation at `components/atoms/Event.js:91`
+
+## Header
+
+The `Header` component provides the main navigation bar with branding, navigation links, and a responsive mobile menu. It uses a sticky position to remain visible while scrolling.
+
+### Usage
+
+```jsx
+import Header from '../components/atoms/Header';
+
+function Layout({ children }) {
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
+}
+```
+
+### Features
+
+<Steps>
+  <Step title="Responsive navigation">
+    Desktop navigation displays inline links, while mobile shows a hamburger menu icon.
+  </Step>
+  
+  <Step title="Active route highlighting">
+    Uses Next.js router to highlight the current page with a background color.
+  </Step>
+  
+  <Step title="External link support">
+    Includes links to GitHub (Contribute) and Buy Me a Coffee (Support).
+  </Step>
+  
+  <Step title="Sticky positioning">
+    Header stays at the top of the viewport with backdrop blur effect.
+  </Step>
+</Steps>
+
+### Styled components
+
+<CodeGroup>
+```jsx Container
+const Container = styled.div`
+  display: flex;
+  z-index: 30;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(20px);
+  padding: 24px 48px;
+  justify-content: space-between;
+  align-items: center;
+`;
+```
+
+```jsx LinkItem
+const LinkItem = styled.p`
+  font-size: 18px;
+  font-weight: 400;
+  padding: 12px;
+  border-radius: 6px;
+  color: #eeeeee;
+  cursor: pointer;
+  transition: all 0.25s;
+  background: ${({ active }) =>
+    active ? 'rgba(255, 255, 255, 0.15)' : 'transparent'};
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+`;
+```
+</CodeGroup>
+
+<Tip>
+  The Header component automatically closes the mobile menu when the route changes using a `useEffect` hook that listens to router changes.
+</Tip>
+
+### Mobile menu
+
+The mobile menu appears on screens with max-width 600px. It includes:
+
+- Home page link with home icon
+- Live Events page link with TV icon
+- Contribute external link with workspaces icon
+- Support external link with Buy Me a Coffee logo
+
+The menu animates in/out using transform and opacity transitions defined at `components/atoms/Header.js:113`
+
+### Reference
+
+See the full implementation at `components/atoms/Header.js:172`
+
+## Toast
+
+The `Toast` component displays temporary success or error notifications at the bottom of the screen. It uses a slide-up animation and auto-dismisses after a set duration.
+
+### Usage
+
+```jsx
+import Toast from '../components/atoms/Toast';
+import { useState } from 'react';
+
+function FormComponent() {
+  const [showToast, setShowToast] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async () => {
+    try {
+      // Submit logic
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err) {
+      setError(err.message);
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  return (
+    <>
+      <button onClick={handleSubmit}>Submit</button>
+      <Toast show={showToast} error={error} />
+    </>
+  );
+}
+```
+
+### Props
+
+<ResponseField name="show" type="boolean">
+  Controls the visibility of the success toast. When `true`, displays the default success message.
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Error message to display. When provided, the toast appears with red styling and shows the error text.
+</ResponseField>
+
+### Styling
+
+The Toast component features:
+
+- **Success state**: Green background (#4BB543) with matching box shadow
+- **Error state**: Red background with rose-tinted shadow
+- **Animation**: Slides up from bottom using translateY transform
+- **Positioning**: Fixed at bottom center of screen
+- **Default message**: "We'll follow up with you soon"
+
+<Warning>
+  The Toast component uses absolute positioning, so ensure its parent container has relative positioning if you need to constrain its position.
+</Warning>
+
+### Animation
+
+The slide animation is controlled via the `show` prop:
+
+```jsx
+transform: translateY(${({ show }) => (show ? '0' : '100')}px);
+```
+
+When `show` is false or error is null, the toast translates 100px down, hiding it below the viewport.
+
+### Reference
+
+See the full implementation at `components/atoms/Toast.js:25`

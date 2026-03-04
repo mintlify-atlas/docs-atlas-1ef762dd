@@ -1,80 +1,171 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get started with BLACC in minutes"
 ---
 
-## Get started in three steps
+## Welcome to BLACC
 
-Get your documentation site running locally and make your first customization.
+Get up and running with the BLACC Community Platform and submit your first video in just a few steps.
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Join the Discord community">
+    BLACC is a community-first platform. Start by joining our Discord server where you'll connect with other black developers and stay updated on live events.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    1. Visit the [BLACC homepage](/)
+    2. Click the **Join our community** button
+    3. Complete the Discord invitation process
+    4. Introduce yourself in the welcome channel
 
-### Step 2: Deploy your changes
+    <Tip>
+      Your Discord username will be used when you submit content to the platform, so make sure it represents you well.
+    </Tip>
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Explore the platform">
+    Navigate through the main sections of the BLACC platform to understand what's available.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ### Homepage (/)
+    The landing page showcases the BLACC mission and provides quick access to the Discord community widget in the bottom-right corner.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ### Live Events
+    View upcoming and past community events (see [Live Events](/features/live-events)), including:
+    - Live coding sessions
+    - Tech talks and workshops
+    - Community podcasts
 
-### Step 3: Go live
+    <Note>
+      Live events are streamed on Twitch. Check the Live Events page regularly for upcoming sessions you can join.
+    </Note>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    ### Video Upload
+    Submit your own coding videos to be featured on the BLACC YouTube channel (see [Video Submissions](/features/video-submissions)). This is where you'll share your knowledge with the community.
+  </Step>
 
-## Next steps
+  <Step title="Submit your first video">
+    Ready to contribute? Let's walk through uploading your first video submission.
 
-Now that you have your docs running, explore these key features:
+    <Note>
+      Videos submitted through the platform are reviewed by the BLACC team before being published to the official YouTube channel.
+    </Note>
+
+    Navigate to the upload page (learn more in [Video Submissions](/features/video-submissions)) and follow these steps:
+
+    ### Upload your video file
+
+    Click the upload area and select your video file. Supported formats include MP4, MOV, AVI, and other common video formats.
+
+    ```javascript
+    // The platform validates file type on upload
+    if (!target.files[0]?.type.startsWith('video')) return;
+    ```
+
+    <Warning>
+      Make sure your video file is ready before starting the upload. You'll need to provide all metadata in the same session.
+    </Warning>
+
+    ### Fill in video details
+
+    Provide the following information:
+
+    <CodeGroup>
+    ```text Discord Username
+    Enter your Discord username exactly as it appears in the community.
+    Example: DevName#1234
+    ```
+
+    ```text Video Title
+    Create a clear, descriptive title for your video.
+    Example: "Building with the Twitch API and GitHub Actions"
+    ```
+
+    ```text Description
+    Write a detailed description of your video content.
+    Include what viewers will learn and any prerequisites.
+    ```
+    </CodeGroup>
+
+    ### Select relevant tags
+
+    Choose one or more tags that describe your video content. Available tags include:
+
+    <CardGroup cols={3}>
+      <Card title="Languages" icon="code">
+        - JavaScript
+        - Python
+        - Java
+        - C++, C#
+        - HTML/CSS
+        - Objective-C
+      </Card>
+      <Card title="Frameworks" icon="layer-group">
+        - React
+        - Angular
+        - Vue
+        - Node.js
+        - Express.js
+        - Flutter
+      </Card>
+      <Card title="Topics" icon="lightbulb">
+        - Cybersecurity
+        - Databases
+        - CI/CD
+        - GraphQL
+        - REST APIs
+        - IoT
+      </Card>
+    </CardGroup>
+
+    <Tip>
+      You can select multiple tags. Choose at least one to help others discover your content.
+    </Tip>
+
+    ### Submit and track progress
+
+    1. Click the **UPLOAD SUBMISSION** button
+    2. Watch the progress bar as your video uploads to Firebase Storage
+    3. Wait for the success confirmation (green checkmark)
+
+    ```javascript
+    // Upload progress is tracked in real-time
+    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    ```
+
+    Your video metadata is stored in Firestore and linked to the uploaded file:
+
+    ```javascript
+    firestore.collection('youtubeSubmissions').add({
+      title,
+      storageId,
+      description,
+      tags: chosenTags,
+      video: downloadURL,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    ```
+  </Step>
+</Steps>
+
+## What's next?
+
+Now that you've completed your first submission, here are some ways to stay engaged:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Attend live events" icon="video" href="/features/live-events">
+    Join live coding sessions and workshops on Twitch
+  </Card>
+  <Card title="Contribute code" icon="github" href="https://github.com/BLACC-Smith">
+    Help improve the BLACC platform on GitHub
+  </Card>
+  <Card title="Support BLACC" icon="mug-hot" href="https://www.buymeacoffee.com/blacc">
+    Buy the team a coffee to support the community
+  </Card>
+  <Card title="Share knowledge" icon="upload">
+    Create more video tutorials to help others learn
+  </Card>
 </CardGroup>
 
+## Need help?
+
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  If you encounter any issues during the upload process, reach out in the Discord community. The BLACC team and community members are there to help.
 </Note>

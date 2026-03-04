@@ -1,0 +1,151 @@
+---
+title: Local development setup
+description: Get your local development environment ready to contribute to the BLACC Community Platform
+---
+
+This guide walks you through setting up the BLACC Community Platform on your local machine, from cloning the repository to running the development server.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- Node.js 14.x or higher
+- npm or yarn package manager
+- Git
+- A Firebase project (for storage and Firestore integration)
+
+## Clone the repository
+
+<Steps>
+  <Step title="Clone the source code">
+    Clone the BLACC Community Platform repository to your local machine:
+
+    ```bash
+    git clone https://github.com/BLACC-Smith/blacc-platform.git
+    cd blacc-platform
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all required npm packages using your preferred package manager:
+
+    <CodeGroup>
+      ```bash npm
+      npm install
+      ```
+
+      ```bash yarn
+      yarn install
+      ```
+    </CodeGroup>
+
+    The project uses these key dependencies:
+    - `next` 10.0.5 - React framework
+    - `react` 17.0.1 - UI library
+    - `firebase` 8.2.2 - Backend services
+    - `@emotion/react` & `@emotion/styled` - CSS-in-JS styling
+    - `axios` - HTTP client
+    - `react-icons` - Icon library
+  </Step>
+
+  <Step title="Configure environment variables">
+    Create a `.env.local` file in the root directory and add your Firebase configuration:
+
+    ```bash
+    FIREBASE_API_KEY=your_api_key_here
+    ```
+
+    <Warning>
+      Never commit `.env.local` or `.env` files to version control. These files are already included in `.gitignore`.
+    </Warning>
+
+    The platform uses the following Firebase configuration (from `lib/config.js`):
+    - Project ID: `blacc-smith`
+    - Auth Domain: `blacc-smith.firebaseapp.com`
+    - Storage Bucket: `blacc-smith.appspot.com`
+  </Step>
+
+  <Step title="Run the development server">
+    Start the Next.js development server:
+
+    <CodeGroup>
+      ```bash npm
+      npm run dev
+      ```
+
+      ```bash yarn
+      yarn dev
+      ```
+    </CodeGroup>
+
+    The application will be available at `http://localhost:3000`.
+  </Step>
+
+  <Step title="Verify the setup">
+    Open your browser and navigate to:
+    - **Home page**: http://localhost:3000
+    - **Live events**: http://localhost:3000/live
+    - **Upload page**: http://localhost:3000/upload
+
+    You should see the BLACC landing page with the community Discord widget.
+  </Step>
+</Steps>
+
+## Available scripts
+
+The following npm scripts are available in `package.json`:
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `dev` | `next dev` | Start development server with hot reload |
+| `build` | `next build` | Build the application for production |
+| `start` | `next start` | Start the production server |
+
+## Common issues
+
+<AccordionGroup>
+  <Accordion title="Firebase initialization error">
+    If you see errors related to Firebase initialization, verify that:
+    - Your `.env.local` file contains the correct `FIREBASE_API_KEY`
+    - The Firebase project exists and has Firestore and Storage enabled
+    - Your IP address is not restricted in Firebase console
+  </Accordion>
+
+  <Accordion title="Port 3000 already in use">
+    If port 3000 is occupied, you can specify a different port:
+
+    ```bash
+    PORT=3001 npm run dev
+    ```
+  </Accordion>
+
+  <Accordion title="Module not found errors">
+    Delete `node_modules` and reinstall dependencies:
+
+    ```bash
+    rm -rf node_modules
+    npm install
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Learn about the application structure and routing
+  </Card>
+  <Card title="Components" icon="cube" href="/development/components">
+    Explore the component architecture and patterns
+  </Card>
+  <Card title="Firebase integration" icon="fire" href="/development/firebase-integration">
+    Understand how Firebase powers the platform
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="https://github.com/BLACC-Smith/next">
+    Start contributing to the project
+  </Card>
+</CardGroup>
+
+<Tip>
+  Join the BLACC Discord community at https://discord.gg/9Bh3TZ2 to connect with other developers and get help with setup issues.
+</Tip>

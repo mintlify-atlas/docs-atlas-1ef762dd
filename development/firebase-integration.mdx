@@ -1,0 +1,495 @@
+---
+title: Firebase integration
+description: Learn how the BLACC Community Platform uses Firebase for storage, Firestore database, and authentication
+---
+
+The BLACC Community Platform uses Firebase for backend services, including Cloud Storage for video uploads and Firestore for storing submission metadata.
+
+## Firebase setup
+
+Firebase is initialized in `lib/config.js` with a singleton pattern to prevent multiple instances:
+
+```javascript lib/config.js
+const { default: firebase } = require('firebase');
+require('firebase/storage');
+
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: 'blacc-smith.firebaseapp.com',
+  databaseURL: 'https://blacc-smith.firebaseio.com',
+  projectId: 'blacc-smith',
+  storageBucket: 'blacc-smith.appspot.com',
+  messagingSenderId: '758861764166',
+  appId: '1:758861764166:web:1fb7689b53f5a706d7dc47',
+  measurementId: 'G-X38KHZFPFM',
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+const firestore = firebase.firestore();
+const storage = firebase.storage();
+
+export default firebase;
+export { firestore, storage };
+```
+
+<Note>
+  The `if (!firebase.apps.length)` check prevents Firebase from being initialized multiple times during development hot reloading.
+</Note>
+
+## Environment variables
+
+The Firebase API key is stored in environment variables for security:
+
+**Required variable**:
+- `FIREBASE_API_KEY` - Your Firebase project API key
+
+**Setup**:
+1. Create `.env.local` in the project root
+2. Add your API key: `FIREBASE_API_KEY=your_key_here`
+3. Never commit this file to version control
+
+<Warning>
+  The `.env.local` file is automatically ignored by git. Never commit sensitive credentials to your repository.
+</Warning>
+
+## Cloud Storage
+
+Firebase Storage stores user-submitted videos before they're added to the YouTube channel.
+
+### Storage structure
+
+```
+blacc-smith.appspot.com/
+└── youtubeSubmissions/
+    ├── {uuid-1}  # Video file with unique ID
+    ├── {uuid-2}
+    └── {uuid-3}
+```
+
+Each uploaded video is stored with:
+- A unique UUID v4 identifier
+- Custom metadata (username, title)
+
+### Upload implementation
+
+The `uploadVideoToStorage` function in `lib/index.js` handles the entire upload process:
+
+```javascript lib/index.js
+import firebase, { firestore, storage } from './config';
+import { v4 as uuidv4 } from 'uuid';
+
+export const uploadVideoToStorage = ({
+  video,
+  title,
+  username,
+  description,
+  chosenTags,
+  updateProgress,
+  onComplete,
+}) => {
+  try {
+    const storageId = uuidv4();
+    const submissionsRef = storage.ref(`youtubeSubmissions/${storageId}`);
+    const uploadTask = submissionsRef.put(video, {
+      customMetadata: { username, title },
+    });
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        updateProgress(Math.round(progress));
+      },
+      (err) => {
+        throw new Error(`uploadVideoToStorage: ${err.toString()}`);
+      },
+      () => {
+        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+          firestore
+            .collection('youtubeSubmissions')
+            .add({
+              title,
+              storageId,
+              description,
+              tags: chosenTags,
+              video: downloadURL,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            })
+            .then(() => setTimeout(() => onComplete(), 1000))
+            .catch((err) => {
+              throw new Error(`uploadVideoToStorage: ${err.toString()}`);
+            });
+        });
+      }
+    );
+  } catch (error) {
+    throw new Error(`uploadVideoToStorage: ${error.toString()}`);
+  }
+};
+```
+
+### Upload flow
+
+<Steps>
+  <Step title="Generate unique ID">
+    Create a UUID v4 identifier for the video:
+    
+    ```javascript
+    const storageId = uuidv4();
+    ```
+  </Step>
+  
+  <Step title="Create storage reference">
+    Point to the storage location:
+    
+    ```javascript
+    const submissionsRef = storage.ref(`youtubeSubmissions/${storageId}`);
+    ```
+  </Step>
+  
+  <Step title="Start upload with metadata">
+    Upload the video file with custom metadata:
+    
+    ```javascript
+    const uploadTask = submissionsRef.put(video, {
+      customMetadata: { username, title },
+    });
+    ```
+  </Step>
+  
+  <Step title="Monitor progress">
+    Track upload progress and update the UI:
+    
+    ```javascript
+    uploadTask.on('state_changed', (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      updateProgress(Math.round(progress));
+    });
+    ```
+  </Step>
+  
+  <Step title="Get download URL">
+    After upload completes, retrieve the public download URL:
+    
+    ```javascript
+    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+      // Save to Firestore
+    });
+    ```
+  </Step>
+  
+  <Step title="Save metadata to Firestore">
+    Store submission details in Firestore for reference
+  </Step>
+</Steps>
+
+## Firestore database
+
+Firestore stores metadata about video submissions for admin review and processing.
+
+### Data structure
+
+**Collection**: `youtubeSubmissions`
+
+**Document fields**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Video title |
+| `storageId` | string | UUID matching Storage file |
+| `description` | string | Video description |
+| `tags` | array | Technology tags for categorization |
+| `video` | string | Download URL from Storage |
+| `createdAt` | timestamp | Server timestamp of submission |
+
+### Writing to Firestore
+
+After the video uploads to Storage, metadata is saved to Firestore:
+
+```javascript lib/index.js
+firestore
+  .collection('youtubeSubmissions')
+  .add({
+    title,
+    storageId,
+    description,
+    tags: chosenTags,
+    video: downloadURL,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  })
+  .then(() => setTimeout(() => onComplete(), 1000))
+  .catch((err) => {
+    throw new Error(`uploadVideoToStorage: ${err.toString()}`);
+  });
+```
+
+<Tip>
+  The `serverTimestamp()` function ensures consistent timestamps across different client time zones.
+</Tip>
+
+### Reading from Firestore
+
+While the current implementation uses static data for events, here's how you would fetch Firestore data:
+
+```javascript
+import { firestore } from '../lib/config';
+
+// Fetch all submissions
+const getSubmissions = async () => {
+  const snapshot = await firestore
+    .collection('youtubeSubmissions')
+    .orderBy('createdAt', 'desc')
+    .get();
+  
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+};
+
+// Fetch with query
+const getReactSubmissions = async () => {
+  const snapshot = await firestore
+    .collection('youtubeSubmissions')
+    .where('tags', 'array-contains', 'react')
+    .get();
+  
+  return snapshot.docs.map(doc => doc.data());
+};
+```
+
+## Usage in components
+
+The upload page demonstrates how to integrate Firebase operations:
+
+```javascript pages/upload.js
+import { uploadVideoToStorage } from '../lib';
+
+export default function Upload() {
+  const [video, setVideo] = useState(null);
+  const [username, setUsername] = useState('');
+  const [title, setTitle] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [description, setDescription] = useState('');
+  const [chosenTags, setChosenTags] = useState([]);
+  
+  const uploadSubmission = async () => {
+    if (validateInputs()) {
+      uploadVideoToStorage({
+        video,
+        username,
+        title,
+        description,
+        chosenTags,
+        updateProgress: setProgress,  // Callback for progress updates
+        onComplete: clearData,         // Callback when complete
+      });
+    }
+  };
+  
+  return (
+    <FormSubmission
+      progress={progress}
+      onSubmit={uploadSubmission}
+      // ... other props
+    />
+  );
+}
+```
+
+### Callback pattern
+
+The Firebase integration uses callbacks for asynchronous updates:
+
+**Progress callback**:
+```javascript
+updateProgress: setProgress
+```
+Called repeatedly during upload to update the progress bar (0-100).
+
+**Completion callback**:
+```javascript
+onComplete: clearData
+```
+Called once after successful upload to reset the form.
+
+## Error handling
+
+Errors are caught at multiple levels:
+
+### Upload function errors
+
+```javascript
+try {
+  const uploadTask = submissionsRef.put(video, { customMetadata });
+  
+  uploadTask.on(
+    'state_changed',
+    (snapshot) => { /* success */ },
+    (err) => {
+      throw new Error(`uploadVideoToStorage: ${err.toString()}`);
+    }
+  );
+} catch (error) {
+  throw new Error(`uploadVideoToStorage: ${error.toString()}`);
+}
+```
+
+### Component-level validation
+
+```javascript pages/upload.js
+const validateInputs = () => {
+  if (!chosenTags.length) setError('You must add at least one tag');
+  if (!description) setError('You must add a description for the video');
+  if (!title) setError('You must add a video title');
+  if (!username) setError('You must add your Discord username');
+  if (!video) setError('You must upload a video');
+  setTimeout(() => setError(''), 5000);
+  return video && username && title && description && chosenTags.length;
+};
+```
+
+<Note>
+  Errors are displayed using the Toast component and automatically clear after 5 seconds.
+</Note>
+
+## Security rules
+
+For production, configure Firebase Security Rules:
+
+### Storage rules
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /youtubeSubmissions/{videoId} {
+      // Allow uploads for authenticated users
+      allow write: if request.auth != null
+                   && request.resource.size < 100 * 1024 * 1024  // 100MB limit
+                   && request.resource.contentType.matches('video/.*');
+      
+      // Allow reads for admins only
+      allow read: if request.auth != null
+                  && request.auth.token.admin == true;
+    }
+  }
+}
+```
+
+### Firestore rules
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /youtubeSubmissions/{submission} {
+      // Anyone can create submissions
+      allow create: if request.resource.data.keys().hasAll(
+        ['title', 'storageId', 'description', 'tags', 'video', 'createdAt']
+      );
+      
+      // Only admins can read/update/delete
+      allow read, update, delete: if request.auth != null
+                                   && request.auth.token.admin == true;
+    }
+  }
+}
+```
+
+<Warning>
+  The current implementation may have open security rules for development. Always implement proper security rules before deploying to production.
+</Warning>
+
+## Firebase SDK version
+
+The project uses Firebase JavaScript SDK v8:
+
+```json package.json
+{
+  "dependencies": {
+    "firebase": "^8.2.2"
+  }
+}
+```
+
+<Note>
+  Firebase v8 uses the namespace import pattern. Newer versions (v9+) use modular imports for better tree-shaking.
+</Note>
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Environment variables">
+    - Store all API keys in `.env.local`
+    - Never commit credentials to version control
+    - Use different Firebase projects for development and production
+  </Accordion>
+  
+  <Accordion title="File uploads">
+    - Validate file types before upload
+    - Implement file size limits (client and server-side)
+    - Generate unique IDs to prevent filename collisions
+    - Include metadata for easier file management
+  </Accordion>
+  
+  <Accordion title="Firestore optimization">
+    - Use batch writes for multiple operations
+    - Index frequently queried fields
+    - Paginate large result sets
+    - Cache read results when appropriate
+  </Accordion>
+  
+  <Accordion title="Error handling">
+    - Wrap Firebase calls in try-catch blocks
+    - Provide user-friendly error messages
+    - Log errors for debugging
+    - Implement retry logic for transient failures
+  </Accordion>
+</AccordionGroup>
+
+## Testing Firebase locally
+
+Use Firebase Emulator Suite for local development:
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Initialize emulators
+firebase init emulators
+
+# Start emulators
+firebase emulators:start
+```
+
+Update `lib/config.js` to use emulators in development:
+
+```javascript
+if (process.env.NODE_ENV === 'development') {
+  firestore.useEmulator('localhost', 8080);
+  storage.useEmulator('localhost', 9199);
+}
+```
+
+<Tip>
+  Using emulators allows you to test Firebase functionality without consuming production quota or affecting live data.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Setup guide" icon="wrench" href="/development/setup">
+    Configure Firebase for your local environment
+  </Card>
+  <Card title="Components" icon="cube" href="/development/components">
+    See how components consume Firebase data
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="https://github.com/BLACC-Smith/next">
+    Start building new Firebase-powered features
+  </Card>
+  <Card title="Firebase docs" icon="book" href="https://firebase.google.com/docs">
+    Explore official Firebase documentation
+  </Card>
+</CardGroup>

@@ -1,0 +1,293 @@
+---
+title: Application architecture
+description: Understand the Next.js structure, routing, and data flow of the BLACC Community Platform
+---
+
+The BLACC Community Platform is built with Next.js 10, following a pages-based routing architecture with custom styling using Emotion CSS-in-JS.
+
+## Project structure
+
+The application follows a standard Next.js project layout:
+
+```
+blacc-platform/
+├── components/
+│   ├── atoms/          # Simple, reusable UI components
+│   └── molecules/      # Composite components
+├── lib/                # Utility functions and Firebase config
+├── pages/              # Next.js pages and routing
+├── public/             # Static assets
+├── styles/             # Global CSS
+└── constants.js        # Shared constants
+```
+
+## Pages and routing
+
+Next.js uses file-based routing. Each file in the `pages/` directory becomes a route automatically.
+
+### Core pages
+
+<CardGroup cols={2}>
+  <Card title="Home (/)" icon="house">
+    Landing page with community overview and Discord widget
+    
+    **File**: `pages/index.js`
+  </Card>
+  
+  <Card title="Live events (/live)" icon="video">
+    Displays upcoming and past community events
+    
+    **File**: `pages/live.js`
+  </Card>
+  
+  <Card title="Upload (/upload)" icon="upload">
+    Video submission form for community content
+    
+    **File**: `pages/upload.js`
+  </Card>
+  
+  <Card title="Discord redirect (/discord)" icon="message">
+    Redirects to Discord invite link
+    
+    **Configured in**: `next.config.js`
+  </Card>
+</CardGroup>
+
+### Special pages
+
+Next.js provides special files for customizing the application:
+
+#### _app.js
+
+The custom App component wraps all pages and provides global layout:
+
+```javascript pages/_app.js
+import '../styles/globals.css';
+import styled from '@emotion/styled';
+import Header from '../components/atoms/Header';
+
+const Wrapper = styled.div`
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  position: relative;
+`;
+
+function MyApp({ Component, pageProps }) {
+  return (
+    <Wrapper>
+      <Header />
+      <Component {...pageProps} />
+    </Wrapper>
+  );
+}
+
+export default MyApp;
+```
+
+<Note>
+  The `_app.js` component ensures the Header is displayed on all pages and maintains consistent styling.
+</Note>
+
+#### _document.js
+
+The custom Document component modifies the initial HTML document structure:
+
+```javascript pages/_document.js
+import Document, { Html, Head, Main, NextScript } from 'next/document';
+
+class MyDocument extends Document {
+  render() {
+    return (
+      <Html lang="en" style={{ background: '#000' }}>
+        <Head>
+          <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="/favicons/apple-touch-icon.png"
+          />
+          <link rel="preconnect" href="https://fonts.gstatic.com" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap"
+            rel="stylesheet"
+          />
+          <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+          />
+          {/* Meta tags for SEO and social sharing */}
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+
+export default MyDocument;
+```
+
+Key features:
+- Loads Google Fonts (Roboto) and Material Icons
+- Sets up favicons for multiple devices
+- Includes meta tags for SEO and social media sharing
+
+## Configuration
+
+### next.config.js
+
+The Next.js configuration file defines custom redirects:
+
+```javascript next.config.js
+module.exports = {
+  async redirects() {
+    return [
+      {
+        source: '/discord',
+        destination: 'https://discord.gg/9Bh3TZ2',
+        permanent: true,
+      },
+    ];
+  },
+};
+```
+
+This creates a convenient `/discord` route that redirects to the community Discord invite.
+
+## Data flow
+
+The application follows a unidirectional data flow pattern:
+
+<Steps>
+  <Step title="User interaction">
+    User interacts with a component (e.g., uploads a video on `/upload`)
+  </Step>
+  
+  <Step title="State management">
+    React hooks (`useState`) manage local component state
+    
+    ```javascript
+    const [video, setVideo] = useState(null);
+    const [title, setTitle] = useState('');
+    const [progress, setProgress] = useState(0);
+    ```
+  </Step>
+  
+  <Step title="Firebase operations">
+    Functions from `lib/index.js` handle Firebase interactions
+    
+    ```javascript
+    import { uploadVideoToStorage } from '../lib';
+    
+    uploadVideoToStorage({
+      video,
+      title,
+      username,
+      description,
+      chosenTags,
+      updateProgress: setProgress,
+      onComplete: clearData,
+    });
+    ```
+  </Step>
+  
+  <Step title="UI updates">
+    Components re-render based on state changes, updating the UI
+  </Step>
+</Steps>
+
+## Styling approach
+
+The platform uses Emotion for CSS-in-JS styling:
+
+```javascript
+import styled from '@emotion/styled';
+
+const Container = styled.div`
+  background: #000;
+  width: 100vw;
+  height: 100vh;
+  
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+`;
+```
+
+**Benefits**:
+- Scoped styles prevent conflicts
+- Dynamic styling based on props
+- Built-in support for media queries
+- Type-safe styling with autocomplete
+
+<Tip>
+  All styled components follow a consistent naming pattern where the variable name matches the semantic HTML element (e.g., `Container`, `Wrapper`, `Title`).
+</Tip>
+
+## Responsive design
+
+The application is mobile-first with breakpoints:
+
+- **Desktop**: Default styles
+- **Mobile**: `@media (max-width: 600px)`
+
+Example from the Header component:
+
+```javascript components/atoms/Header.js
+const Container = styled.div`
+  padding: 24px 48px;
+  
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+`;
+
+const LinkItem = styled.p`
+  font-size: 18px;
+  
+  @media (max-width: 600px) {
+    display: none;  // Hidden on mobile, replaced by hamburger menu
+  }
+`;
+```
+
+## SEO and meta tags
+
+Each page includes comprehensive meta tags for SEO and social sharing:
+
+```javascript pages/live.js
+<Head>
+  <title>Live Events w/BLACC</title>
+  <meta
+    name="description"
+    content="Check out what we're up to! Stay in the know about our live coding sessions and podcasts!"
+  />
+  
+  {/* Facebook Meta Tags */}
+  <meta property="og:url" content="https://blacc.xyz/live" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Live Events w/BLACC" />
+  <meta property="og:image" content="/blacc_live.png" />
+  
+  {/* Twitter Meta Tags */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Live Events w/BLACC" />
+</Head>
+```
+
+<Note>
+  Each page has custom Open Graph and Twitter Card meta tags for rich social media previews.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Components" icon="cube" href="/development/components">
+    Learn about the atomic design pattern used for components
+  </Card>
+  <Card title="Firebase integration" icon="fire" href="/development/firebase-integration">
+    Understand the backend Firebase services
+  </Card>
+</CardGroup>

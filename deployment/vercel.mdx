@@ -1,0 +1,425 @@
+---
+title: Deploy to Vercel
+description: Step-by-step guide for deploying the BLACC Community Platform to Vercel
+---
+
+Vercel is the recommended platform for deploying the BLACC Community Platform. This guide walks you through the deployment process from start to finish.
+
+## Prerequisites
+
+Before deploying, ensure you have:
+
+- A [Vercel account](https://vercel.com/signup) (free tier available)
+- Your code in a Git repository (GitHub, GitLab, or Bitbucket)
+- Firebase project configured with:
+  - Firestore database enabled
+  - Storage bucket created
+  - API key ready
+
+<Note>
+  If you haven't set up Firebase yet, create a project at [Firebase Console](https://console.firebase.google.com/) first.
+</Note>
+
+## Deployment methods
+
+You can deploy to Vercel using:
+
+1. **Vercel Dashboard** (recommended for first deployment)
+2. **Vercel CLI** (recommended for ongoing deployments)
+3. **Git integration** (automatic deployments)
+
+## Deploy via Vercel Dashboard
+
+<Steps>
+
+<Step title="Import your project">
+  1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+  2. Click "Add New" > "Project"
+  3. Import your Git repository
+  4. Authorize Vercel to access your repository if prompted
+</Step>
+
+<Step title="Configure project settings">
+  Vercel auto-detects Next.js projects. Verify these settings:
+  
+  - **Framework Preset**: Next.js
+  - **Build Command**: `npm run build` or `yarn build`
+  - **Output Directory**: `.next` (default)
+  - **Install Command**: `npm install` or `yarn install`
+</Step>
+
+<Step title="Add environment variables">
+  In the "Environment Variables" section, add:
+  
+  - **Name**: `FIREBASE_API_KEY`
+  - **Value**: Your Firebase API key
+  
+  Select all environments (Production, Preview, Development).
+  
+  <Warning>
+    The `FIREBASE_API_KEY` is required for the application to connect to Firebase. See the [environment variables guide](/deployment/environment-variables) for details.
+  </Warning>
+</Step>
+
+<Step title="Deploy">
+  Click "Deploy" and wait for the build to complete. This typically takes 1-3 minutes.
+</Step>
+
+<Step title="Verify deployment">
+  Once deployed, Vercel provides a production URL (e.g., `your-app.vercel.app`). Visit the URL to verify your deployment.
+</Step>
+
+</Steps>
+
+## Deploy via Vercel CLI
+
+For command-line deployments:
+
+<Steps>
+
+<Step title="Install Vercel CLI">
+  ```bash
+  npm install -g vercel
+  ```
+</Step>
+
+<Step title="Login to Vercel">
+  ```bash
+  vercel login
+  ```
+  
+  Follow the prompts to authenticate.
+</Step>
+
+<Step title="Deploy from project directory">
+  ```bash
+  cd /path/to/blacc-platform
+  vercel
+  ```
+  
+  The CLI will:
+  - Detect your Next.js project
+  - Ask configuration questions (accept defaults for Next.js)
+  - Upload and build your project
+  - Provide a deployment URL
+</Step>
+
+<Step title="Set environment variables">
+  ```bash
+  vercel env add FIREBASE_API_KEY
+  ```
+  
+  When prompted:
+  - Enter your Firebase API key
+  - Select environments: Production, Preview, Development
+</Step>
+
+<Step title="Deploy to production">
+  ```bash
+  vercel --prod
+  ```
+  
+  This creates a production deployment with your environment variables.
+</Step>
+
+</Steps>
+
+<Tip>
+  Use `vercel` for preview deployments and `vercel --prod` for production deployments.
+</Tip>
+
+## Configure custom domain
+
+To use a custom domain:
+
+<Steps>
+
+<Step title="Add domain in Vercel">
+  1. Go to your project in Vercel Dashboard
+  2. Navigate to Settings > Domains
+  3. Enter your custom domain
+  4. Click "Add"
+</Step>
+
+<Step title="Configure DNS">
+  Add DNS records at your domain registrar:
+  
+  **For apex domain (example.com)**:
+  ```
+  Type: A
+  Name: @
+  Value: 76.76.21.21
+  ```
+  
+  **For subdomain (www.example.com)**:
+  ```
+  Type: CNAME
+  Name: www
+  Value: cname.vercel-dns.com
+  ```
+</Step>
+
+<Step title="Verify domain">
+  Vercel automatically verifies your domain and issues an SSL certificate. This may take a few minutes to propagate.
+</Step>
+
+</Steps>
+
+## Next.js configuration considerations
+
+### Custom redirects
+
+The platform includes a redirect configuration in `next.config.js`:
+
+```javascript next.config.js
+module.exports = {
+  async redirects() {
+    return [
+      {
+        source: '/discord',
+        destination: 'https://discord.gg/9Bh3TZ2',
+        permanent: true,
+      },
+    ];
+  },
+};
+```
+
+Vercel automatically handles these redirects. The `/discord` path will redirect to the Discord server.
+
+### Build optimization
+
+Vercel optimizes your Next.js build automatically:
+
+- **Automatic code splitting** - Only necessary code is loaded per page
+- **Image optimization** - Next.js Image component uses Vercel's image optimization
+- **Serverless functions** - API routes become serverless functions
+- **Edge caching** - Static assets cached on Vercel's global CDN
+
+<Note>
+  The BLACC Community Platform uses Next.js 10.0.5. Ensure your `package.json` version matches for consistent builds.
+</Note>
+
+## Automatic deployments
+
+Vercel can automatically deploy when you push to Git:
+
+### Production deployments
+
+- Push to `main` or `master` branch triggers production deployment
+- Production URL updates automatically
+- Custom domains point to latest production deployment
+
+### Preview deployments
+
+- Push to any other branch creates a preview deployment
+- Each pull request gets a unique preview URL
+- Perfect for testing before merging
+
+<CodeGroup>
+```bash Push to production
+git add .
+git commit -m "Update feature"
+git push origin main
+```
+
+```bash Push to preview
+git checkout -b feature-branch
+git add .
+git commit -m "Test new feature"
+git push origin feature-branch
+```
+</CodeGroup>
+
+## Managing deployments
+
+### View deployment logs
+
+In Vercel Dashboard:
+1. Go to your project
+2. Click on a deployment
+3. View "Build Logs" tab for detailed output
+
+### Rollback deployment
+
+To rollback to a previous version:
+1. Navigate to project deployments
+2. Find the deployment to restore
+3. Click "..." menu > "Promote to Production"
+
+### Environment variables
+
+Update environment variables:
+1. Go to Settings > Environment Variables
+2. Edit or add variables
+3. Redeploy for changes to take effect
+
+<Tip>
+  Changes to environment variables require a redeploy. Vercel prompts you to redeploy after updating variables.
+</Tip>
+
+## Performance optimization
+
+### Enable analytics
+
+Vercel provides built-in analytics:
+
+1. Go to your project
+2. Navigate to Analytics tab
+3. Enable Web Analytics
+4. View real-time performance metrics
+
+### Monitor build times
+
+Optimize build performance by:
+
+- Reviewing build logs for slow steps
+- Optimizing dependencies
+- Using dynamic imports for large components
+- Implementing ISR (Incremental Static Regeneration) where applicable
+
+### Edge caching
+
+Vercel automatically caches:
+- Static pages at the edge
+- API routes (with proper cache headers)
+- Static assets (images, CSS, JS)
+
+## Troubleshooting
+
+### Build failures
+
+**Problem**: Build fails on Vercel but works locally.
+
+**Solutions**:
+- Check build logs for specific errors
+- Ensure all dependencies are in `package.json`
+- Verify Node.js version compatibility
+- Check environment variables are set
+
+<CodeGroup>
+```bash Check Node version locally
+node --version
+```
+
+```json Specify Node version in package.json
+{
+  "engines": {
+    "node": "14.x"
+  }
+}
+```
+</CodeGroup>
+
+### Firebase connection errors
+
+**Problem**: Application can't connect to Firebase.
+
+**Solutions**:
+- Verify `FIREBASE_API_KEY` is set in environment variables
+- Check Firebase Console for API restrictions
+- Ensure Vercel domain is allowed in Firebase settings
+- Review browser console for detailed error messages
+
+### Redirect not working
+
+**Problem**: `/discord` redirect doesn't work.
+
+**Solutions**:
+- Verify `next.config.js` is in the root directory
+- Check syntax of redirects configuration
+- Review deployment logs for config errors
+- Test redirect after build completes
+
+### Environment variable not available
+
+**Problem**: `process.env.FIREBASE_API_KEY` is undefined.
+
+**Solutions**:
+- Confirm variable name is exactly `FIREBASE_API_KEY`
+- Check variable is set for correct environment (Production/Preview/Development)
+- Redeploy after adding environment variables
+- Review build logs for environment variable loading
+
+## CI/CD integration
+
+For advanced workflows, integrate Vercel with CI/CD:
+
+### GitHub Actions example
+
+```yaml .github/workflows/deploy.yml
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      
+      - name: Deploy to Vercel
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+```
+
+<Warning>
+  Store Vercel tokens and IDs in repository secrets, never commit them directly.
+</Warning>
+
+## Best practices
+
+### Development workflow
+
+1. **Local development**: Use `npm run dev` for development
+2. **Test builds**: Run `npm run build` before pushing
+3. **Preview deployments**: Use preview URLs to test changes
+4. **Production deploy**: Merge to main after testing
+
+### Security
+
+- Keep environment variables in Vercel, not in code
+- Use preview deployments to test before production
+- Enable Vercel's security headers
+- Review Firebase security rules regularly
+
+### Monitoring
+
+- Enable Vercel Analytics for performance insights
+- Monitor Firebase usage and quotas
+- Set up alerts for deployment failures
+- Review build logs regularly
+
+## Additional resources
+
+<CardGroup cols={2}>
+  <Card title="Vercel documentation" icon="book" href="https://vercel.com/docs">
+    Official Vercel documentation
+  </Card>
+  <Card title="Next.js on Vercel" icon="rocket" href="https://vercel.com/docs/frameworks/nextjs">
+    Next.js deployment guide
+  </Card>
+  <Card title="Environment variables" icon="key" href="/deployment/environment-variables">
+    Configure Firebase environment variables
+  </Card>
+  <Card title="Deployment overview" icon="info" href="/deployment/overview">
+    General deployment considerations
+  </Card>
+</CardGroup>
+
+## Next steps
+
+After successful deployment:
+
+- Set up custom domain (optional)
+- Enable Vercel Analytics
+- Configure Firebase security rules
+- Monitor application performance
+- Set up error tracking (e.g., Sentry)

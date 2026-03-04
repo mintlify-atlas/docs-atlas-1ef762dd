@@ -1,0 +1,424 @@
+---
+title: Styling with Emotion
+description: Learn how the BLACC Community Platform uses Emotion CSS-in-JS for component styling
+---
+
+The BLACC Community Platform uses [Emotion](https://emotion.sh/) as its CSS-in-JS solution. Emotion enables you to write CSS styles with JavaScript, providing component-scoped styling, dynamic styling based on props, and excellent developer experience.
+
+## Why Emotion?
+
+Emotion offers several advantages for the BLACC platform:
+
+<Steps>
+  <Step title="Component-scoped styles">
+    Styles are automatically scoped to components, eliminating naming conflicts and cascade issues.
+  </Step>
+  
+  <Step title="Dynamic styling">
+    Easily create styles that respond to component props and state.
+  </Step>
+  
+  <Step title="Performance">
+    Only the styles that are used are inserted into the document, keeping bundle sizes small.
+  </Step>
+  
+  <Step title="Developer experience">
+    Write CSS with full JavaScript capabilities, including variables, functions, and conditional logic.
+  </Step>
+</Steps>
+
+## Installation
+
+The platform uses the `@emotion/styled` package for creating styled components:
+
+```bash
+npm install @emotion/styled
+```
+
+Or with Yarn:
+
+```bash
+yarn add @emotion/styled
+```
+
+## Basic usage
+
+Create styled components by importing `styled` from `@emotion/styled` and using tagged template literals:
+
+```jsx
+import styled from '@emotion/styled';
+
+const Button = styled.button`
+  padding: 12px 24px;
+  border-radius: 4px;
+  background: #000;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+`;
+
+function MyComponent() {
+  return <Button>Click me</Button>;
+}
+```
+
+## Styling patterns
+
+The BLACC codebase follows several consistent styling patterns across all components.
+
+### Container components
+
+Most components start with a `Container` styled component that defines the overall layout:
+
+```jsx
+const Container = styled.div`
+  width: 100%;
+  padding: 64px;
+  background: #000;
+`;
+```
+
+<Note>
+  Container components typically set width, padding, background colors, and display properties like flexbox or grid.
+</Note>
+
+### Responsive design
+
+All components use media queries for mobile responsiveness at the 600px breakpoint:
+
+<CodeGroup>
+```jsx Desktop-first approach
+const Container = styled.div`
+  padding: 64px;
+
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+`;
+```
+
+```jsx Layout changes
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+```
+
+```jsx Visibility toggles
+const DesktopOnly = styled.div`
+  display: block;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
+`;
+```
+</CodeGroup>
+
+### Dynamic prop-based styling
+
+Emotion allows you to access component props within your styles using template literal functions:
+
+```jsx
+const Button = styled.button`
+  padding: 12px 24px;
+  background: ${({ active }) => active ? '#fff' : '#000'};
+  color: ${({ active }) => active ? '#000' : '#fff'};
+  transition: all 0.3s;
+`;
+
+function Navigation() {
+  return (
+    <>
+      <Button active>Home</Button>
+      <Button>About</Button>
+    </>
+  );
+}
+```
+
+### Multi-line prop logic
+
+For more complex conditional styling, use multi-line template strings:
+
+```jsx
+const Toast = styled.div`
+  padding: 12px;
+  border-radius: 8px;
+  ${({ isError }) =>
+    isError
+      ? `
+          background: red;
+          box-shadow: 0 7px 15px #ef9a9a;
+        `
+      : `
+          background: #4BB543;
+          box-shadow: 0 7px 15px #82cc7d;
+        `
+  }
+`;
+```
+
+Example from `components/atoms/Toast.js:4`
+
+<Tip>
+  When using multi-line conditional styles, indent them properly for readability. The actual CSS will be properly formatted at runtime.
+</Tip>
+
+## Common styling patterns
+
+The BLACC platform uses several recurring styling patterns across components.
+
+### Translucent overlays
+
+Create frosted glass effects with backdrop blur:
+
+```jsx
+const Header = styled.div`
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(20px);
+`;
+```
+
+Reference: `components/atoms/Header.js:16`
+
+### Hover effects
+
+Add interactive hover states with transitions:
+
+```jsx
+const Card = styled.div`
+  background: #eeeeee;
+  transition: all 0.25s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 3px 6px #c8c8c8;
+  }
+`;
+```
+
+Reference: `components/molecules/FormSubmission.js:63`
+
+### Transform animations
+
+Create smooth animations with transform and opacity:
+
+```jsx
+const Menu = styled.div`
+  transition: all 0.3s;
+  transform-origin: top center;
+  ${({ show }) =>
+    show
+      ? 'transform: translateY(0); opacity: 1;'
+      : 'transform: translateY(-5%); opacity: 0; z-index: -1;'
+  };
+`;
+```
+
+Reference: `components/atoms/Header.js:113`
+
+### Nested selectors
+
+Use the `&` symbol to reference the parent selector:
+
+```jsx
+const Button = styled.button`
+  border: 1px solid transparent;
+
+  &:hover {
+    border: 1px solid #fafafa;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+```
+
+### Child element styling
+
+Style child elements based on parent state:
+
+```jsx
+const Container = styled.div`
+  ${({ show }) =>
+    show
+      ? `
+          i, p {
+            color: #fff;
+          }
+        `
+      : ''
+  }
+`;
+```
+
+Reference: `components/molecules/FormSubmission.js:109`
+
+## Color palette
+
+The BLACC platform uses a consistent color palette across components:
+
+<CardGroup cols={2}>
+  <Card title="Primary colors">
+    - Black backgrounds: `#000`
+    - White text: `#fff`, `#fafafa`
+    - Light gray: `#eeeeee`, `#e0e0e0`
+    - Medium gray: `#757575`, `#525456`
+  </Card>
+  
+  <Card title="Brand colors">
+    - Twitch purple: `#9147ff`
+    - YouTube red: `#ff0202`
+    - Success green: `#4BB543`
+    - Error red: `red`, `#ef9a9a`
+  </Card>
+</CardGroup>
+
+## Typography scale
+
+Consistent font sizing across the platform:
+
+| Use case | Desktop | Mobile |
+|----------|---------|--------|
+| Hero/Brand | 32px | 24px |
+| Section title | 36px | - |
+| Large heading | 32px | 24px |
+| Body large | 24px | - |
+| Navigation link | 18px | - |
+| Body text | 16px | - |
+| Small text | 14px | - |
+| Tag/label | 12px | - |
+
+## Spacing system
+
+The platform uses consistent spacing values:
+
+- Small gaps: `6px`, `8px`, `12px`
+- Medium spacing: `16px`, `24px`, `32px`
+- Large spacing: `48px`, `64px`
+
+<Warning>
+  Always use even numbers for spacing values to ensure pixel-perfect rendering on standard displays.
+</Warning>
+
+## Best practices
+
+Follow these guidelines when styling components in the BLACC platform:
+
+<Steps>
+  <Step title="Name components clearly">
+    Use descriptive names like `Container`, `Title`, `CTA`, `Wrapper` that indicate the component's purpose.
+  </Step>
+  
+  <Step title="Group related styles">
+    Define all styled components at the top of the file before the main component function.
+  </Step>
+  
+  <Step title="Mobile-first consideration">
+    While the codebase uses desktop-first styles, always include mobile responsive styles for components that need them.
+  </Step>
+  
+  <Step title="Use transitions">
+    Add `transition: all 0.2s` (or similar) to interactive elements for smooth state changes.
+  </Step>
+  
+  <Step title="Prefer transform over positional properties">
+    Use `transform: translateY()` instead of changing `top` or `margin` for better performance.
+  </Step>
+</Steps>
+
+## Example: Complete component
+
+Here's a complete example showing all the patterns together:
+
+```jsx
+import styled from '@emotion/styled';
+
+const Container = styled.div`
+  padding: 64px;
+  background: #000;
+
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+`;
+
+const Title = styled.h2`
+  font-size: 36px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 24px;
+`;
+
+const Card = styled.div`
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: all 0.25s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+`;
+
+const Button = styled.button`
+  padding: 12px 24px;
+  border-radius: 4px;
+  border: none;
+  background: ${({ primary }) => primary ? '#9147ff' : 'transparent'};
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+export default function ExampleComponent({ title, onAction }) {
+  return (
+    <Container>
+      <Title>{title}</Title>
+      <Card>
+        <p>This is an example component showcasing Emotion styling.</p>
+        <Button primary onClick={onAction}>
+          Take Action
+        </Button>
+      </Card>
+    </Container>
+  );
+}
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Emotion Documentation" icon="book" href="https://emotion.sh/docs/introduction">
+    Official Emotion documentation with API reference and advanced patterns.
+  </Card>
+  
+  <Card title="Styled Components" icon="code" href="https://emotion.sh/docs/styled">
+    Complete guide to the styled API used throughout the BLACC platform.
+  </Card>
+  
+  <Card title="CSS Prop" icon="paintbrush" href="https://emotion.sh/docs/css-prop">
+    Alternative styling approach using the css prop (not used in BLACC but available).
+  </Card>
+  
+  <Card title="TypeScript" icon="code" href="https://emotion.sh/docs/typescript">
+    TypeScript support for Emotion if you choose to migrate to TypeScript.
+  </Card>
+</CardGroup>

@@ -1,0 +1,188 @@
+---
+title: Community hub
+description: Connect with black developers in a safe space to exchange knowledge and grow together
+---
+
+The BLACC Community Platform serves as a central hub for black developers to connect, share knowledge, and support each other in tech. The platform creates a welcoming environment where members can engage with content and participate in the community.
+
+## Overview
+
+The community hub provides a unified landing page that showcases what BLACC is all about and provides immediate access to join the Discord community.
+
+### Key benefits
+
+<CardGroup cols={2}>
+  <Card title="Safe space" icon="shield-halved">
+    A dedicated environment for black people to exchange knowledge and be exposed to new technologies
+  </Card>
+  <Card title="Black excellence" icon="star">
+    A community exemplifying black excellence and pushing the needle within tech
+  </Card>
+  <Card title="Easy access" icon="door-open">
+    One-click access to join the Discord community directly from the platform
+  </Card>
+  <Card title="Live engagement" icon="comments">
+    Interactive Discord widget showing real-time community activity
+  </Card>
+</CardGroup>
+
+## User experience
+
+When you visit the BLACC platform, you're greeted with a clean, focused interface that immediately communicates the mission and values of the community.
+
+<Steps>
+  <Step title="Landing page">
+    The home page features a full-screen jumbotron with the community tagline: "A community exemplifying black excellence and pushing the needle within tech"
+  </Step>
+  
+  <Step title="Join the community">
+    Click the "Join our community" button to be redirected to the BLACC Discord server at `https://discord.gg/9Bh3TZ2`
+  </Step>
+  
+  <Step title="Live Discord widget">
+    Interact with the Discord widget in the bottom-right corner to see who's currently online and active in the community
+  </Step>
+</Steps>
+
+## Discord integration
+
+The platform features an embedded Discord widget that provides real-time visibility into community activity.
+
+<CodeGroup>
+```jsx Widget implementation
+<Widget open={openWidget}>
+  <Click onClick={() => setOpenWidget(!openWidget)} />
+  <iframe
+    src="https://discord.com/widget?id=769610692297752586&theme=dark"
+    width="100%"
+    height="100%"
+    allowtransparency="true"
+    frameBorder="0"
+    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+  ></iframe>
+</Widget>
+```
+
+```jsx State management
+const [openWidget, setOpenWidget] = useState(false);
+
+return (
+  <Widget open={openWidget}>
+    <Click onClick={() => setOpenWidget(!openWidget)} />
+    {/* Discord iframe */}
+  </Widget>
+);
+```
+</CodeGroup>
+
+The widget can be expanded or collapsed by clicking on it, providing a non-intrusive way to check community activity.
+
+<Note>
+  The Discord widget shows real-time member status and allows quick access to the server without leaving the platform.
+</Note>
+
+## Navigation
+
+The platform uses a sticky header that provides easy navigation across all features:
+
+- **Home**: Return to the community landing page
+- **Live Events**: Access live and past coding sessions and podcasts
+- **Contribute**: Link to the BLACC GitHub organization
+- **Support**: Buy Me a Coffee link for community support
+
+<CodeGroup>
+```jsx Desktop navigation
+<Links>
+  <Link href="/live">
+    <LinkItem active={router.route === '/live'}>Live Events</LinkItem>
+  </Link>
+  <ExternalLink href="https://github.com/BLACC-Smith" target="_blank">
+    <LinkItem>Contribute</LinkItem>
+  </ExternalLink>
+  <ExternalLink href="https://www.buymeacoffee.com/blacc" target="_blank">
+    <Image src="/bmc.png" width="20" height="29" />
+  </ExternalLink>
+</Links>
+```
+
+```jsx Mobile navigation
+<MenuContainer show={showMenu}>
+  <Link href="/">
+    <MenuItem active={router.route === '/'}>
+      <Icon className="material-icons">home</Icon>
+      <MenuLabel>Home</MenuLabel>
+    </MenuItem>
+  </Link>
+  <Link href="/live">
+    <MenuItem active={router.route === '/live'}>
+      <Icon className="material-icons">live_tv</Icon>
+      <MenuLabel>Live Events</MenuLabel>
+    </MenuItem>
+  </Link>
+  {/* Additional menu items */}
+</MenuContainer>
+```
+</CodeGroup>
+
+<Tip>
+  The navigation automatically highlights the current page and collapses into a mobile-friendly menu on smaller screens.
+</Tip>
+
+## Responsive design
+
+The community hub is fully responsive and optimized for all device sizes:
+
+- **Desktop**: Full jumbotron layout with expanded Discord widget
+- **Tablet**: Adjusted padding and font sizes for comfortable viewing
+- **Mobile**: Hamburger menu navigation and optimized Discord widget placement
+
+```jsx Responsive styling example
+const Jumbotron = styled.div`
+  padding: 128px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  @media (max-width: 600px) {
+    padding: 128px 24px;
+  }
+`;
+```
+
+## SEO optimization
+
+The platform includes comprehensive meta tags for social sharing:
+
+```jsx Meta tags implementation
+<Head>
+  <title>BLACC, The Black Coder Community</title>
+  <meta
+    name="description"
+    content="BLACC (The Black Coder Community), a safe space for black people to exchange knowledge and to be exposed to new technologies."
+  />
+  
+  {/* Open Graph tags */}
+  <meta property="og:title" content="BLACC, The Black Coder Community" />
+  <meta property="og:image" content="/blacc.png" />
+  
+  {/* Twitter Card tags */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BLACC, The Black Coder Community" />
+</Head>
+```
+
+<Warning>
+  Make sure your Discord server ID and invite link are kept up to date in the source code to ensure members can successfully join the community.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Live events" icon="video" href="/features/live-events">
+    Learn how to watch and participate in live coding sessions
+  </Card>
+  <Card title="Discord integration" icon="discord" href="/features/discord-integration">
+    Explore the full Discord integration features
+  </Card>
+</CardGroup>

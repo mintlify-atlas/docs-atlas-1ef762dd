@@ -1,0 +1,276 @@
+---
+title: Environment variables
+description: Configure Firebase and environment variables for the BLACC Community Platform
+---
+
+The BLACC Community Platform requires environment variables to connect to Firebase services. This guide explains how to configure them for different environments.
+
+## Required variables
+
+The platform requires the following Firebase configuration variables:
+
+### FIREBASE_API_KEY
+
+Your Firebase project's API key for client-side authentication.
+
+```bash
+FIREBASE_API_KEY=your_api_key_here
+```
+
+<Warning>
+  Keep your API keys secure. Never commit them to version control. The `.gitignore` file is configured to exclude `.env` files.
+</Warning>
+
+## Firebase configuration
+
+The Firebase configuration is defined in `lib/config.js`:
+
+```javascript lib/config.js
+const { default: firebase } = require('firebase');
+require('firebase/storage');
+
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: 'blacc-smith.firebaseapp.com',
+  databaseURL: 'https://blacc-smith.firebaseio.com',
+  projectId: 'blacc-smith',
+  storageBucket: 'blacc-smith.appspot.com',
+  messagingSenderId: '758861764166',
+  appId: '1:758861764166:web:1fb7689b53f5a706d7dc47',
+  measurementId: 'G-X38KHZFPFM',
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+const firestore = firebase.firestore();
+const storage = firebase.storage();
+
+export default firebase;
+export { firestore, storage };
+```
+
+### Configuration breakdown
+
+- **apiKey** - The only environment variable; authenticates client requests
+- **authDomain** - Firebase authentication domain
+- **databaseURL** - Firestore real-time database URL
+- **projectId** - Your Firebase project identifier
+- **storageBucket** - Cloud Storage bucket for video uploads
+- **messagingSenderId** - Firebase Cloud Messaging sender ID
+- **appId** - Firebase app identifier
+- **measurementId** - Google Analytics measurement ID
+
+<Note>
+  Most Firebase configuration values are hardcoded for the `blacc-smith` project. Only the API key is loaded from environment variables.
+</Note>
+
+## Setting up environment variables
+
+### Local development
+
+<Steps>
+
+<Step title="Create .env.local file">
+  Create a `.env.local` file in the project root:
+  
+  ```bash
+  touch .env.local
+  ```
+</Step>
+
+<Step title="Add Firebase API key">
+  Add your Firebase API key to `.env.local`:
+  
+  ```bash .env.local
+  FIREBASE_API_KEY=AIzaSyExample_Key_123456789
+  ```
+</Step>
+
+<Step title="Restart the development server">
+  ```bash
+  npm run dev
+  ```
+  
+  Next.js will automatically load variables from `.env.local`.
+</Step>
+
+</Steps>
+
+### Production deployment
+
+For production deployments, configure environment variables through your hosting platform's dashboard or CLI.
+
+## Environment file types
+
+Next.js supports multiple environment files:
+
+| File | Environment | Loaded |
+|------|-------------|--------|
+| `.env` | All | Always |
+| `.env.local` | All | Always (ignored by git) |
+| `.env.development` | Development | `npm run dev` |
+| `.env.development.local` | Development | `npm run dev` (ignored by git) |
+| `.env.production` | Production | `npm run build` + `npm start` |
+| `.env.production.local` | Production | `npm run build` + `npm start` (ignored by git) |
+
+<Tip>
+  Use `.local` files for sensitive values. They are automatically excluded from version control by the `.gitignore` file.
+</Tip>
+
+## Getting your Firebase API key
+
+<Steps>
+
+<Step title="Open Firebase Console">
+  Navigate to [Firebase Console](https://console.firebase.google.com/) and select your project.
+</Step>
+
+<Step title="Access project settings">
+  Click the gear icon next to "Project Overview" and select "Project settings".
+</Step>
+
+<Step title="Find your API key">
+  Scroll to "Your apps" section and locate the "Web API Key" or "API key" field.
+</Step>
+
+<Step title="Copy the key">
+  Copy the API key and add it to your environment variables.
+</Step>
+
+</Steps>
+
+## Vercel deployment
+
+When deploying to Vercel:
+
+<Steps>
+
+<Step title="Open project settings">
+  Navigate to your project in the Vercel dashboard and go to Settings > Environment Variables.
+</Step>
+
+<Step title="Add FIREBASE_API_KEY">
+  Add a new environment variable:
+  - **Name**: `FIREBASE_API_KEY`
+  - **Value**: Your Firebase API key
+  - **Environments**: Select Production, Preview, and Development
+</Step>
+
+<Step title="Redeploy">
+  Trigger a new deployment to apply the environment variables.
+</Step>
+
+</Steps>
+
+<Note>
+  See the [Vercel deployment guide](/deployment/vercel) for complete deployment instructions.
+</Note>
+
+## Verifying configuration
+
+To verify your environment variables are correctly configured:
+
+<Steps>
+
+<Step title="Check Firebase initialization">
+  The application initializes Firebase on startup. Check the browser console for any Firebase-related errors.
+</Step>
+
+<Step title="Test Firebase operations">
+  Try uploading a video or accessing Firestore data to ensure the connection works.
+</Step>
+
+<Step title="Review Firebase console">
+  Check your Firebase Console for incoming requests to confirm connectivity.
+</Step>
+
+</Steps>
+
+## Security best practices
+
+<Warning>
+  Follow these security guidelines to protect your Firebase project:
+</Warning>
+
+### API key security
+
+- **Never commit** API keys to version control
+- **Restrict API key** in Firebase Console by:
+  - Setting HTTP referrer restrictions
+  - Limiting to specific domains
+  - Disabling unused APIs
+
+### Firebase security rules
+
+Ensure proper Firestore and Storage security rules are configured:
+
+```javascript Firestore rules example
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /youtubeSubmissions/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+```javascript Storage rules example
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /youtubeSubmissions/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+<Tip>
+  Adjust security rules based on your authentication requirements. The examples above allow authenticated writes only.
+</Tip>
+
+## Troubleshooting
+
+### Environment variable not loading
+
+**Problem**: `FIREBASE_API_KEY` is undefined.
+
+**Solutions**:
+- Ensure the variable name is exactly `FIREBASE_API_KEY`
+- Restart the development server after adding variables
+- Check that `.env.local` is in the project root directory
+- Verify no typos in the variable name or value
+
+### Firebase initialization error
+
+**Problem**: Firebase fails to initialize.
+
+**Solutions**:
+- Verify the API key is correct
+- Check Firebase Console for project status
+- Ensure Firebase services (Firestore, Storage) are enabled
+- Review browser console for detailed error messages
+
+### Production deployment issues
+
+**Problem**: Application works locally but fails in production.
+
+**Solutions**:
+- Confirm environment variables are set in production platform
+- Check deployment logs for configuration errors
+- Verify Firebase project allows requests from production domain
+- Ensure API key restrictions allow production domain
+
+## Additional resources
+
+<CardGroup cols={2}>
+  <Card title="Next.js environment variables" icon="book" href="https://nextjs.org/docs/basic-features/environment-variables">
+    Official Next.js documentation on environment variables
+  </Card>
+  <Card title="Firebase security" icon="shield" href="https://firebase.google.com/docs/rules">
+    Learn about Firebase security rules
+  </Card>
+</CardGroup>

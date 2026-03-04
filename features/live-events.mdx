@@ -1,0 +1,321 @@
+---
+title: Live events
+description: Watch live coding sessions and podcasts, and access recordings of past events
+---
+
+BLACC hosts regular live events including coding sessions, technical discussions, and podcasts. The live events feature provides a centralized platform to watch current streams and browse past recordings.
+
+## Overview
+
+The live events page is accessible at `/live` and displays both upcoming/live events and a searchable archive of past sessions. All streams are broadcasted simultaneously to multiple platforms including Twitch, YouTube, and the BLACC platform itself.
+
+### Features at a glance
+
+<CardGroup cols={2}>
+  <Card title="Multi-platform streaming" icon="tower-broadcast">
+    Watch live on BLACC, Twitch, or YouTube - your choice
+  </Card>
+  <Card title="Embedded player" icon="play">
+    Built-in video player powered by Restream for seamless viewing
+  </Card>
+  <Card title="Event archive" icon="clock-rotate-left">
+    Access recordings of all past coding sessions and podcasts
+  </Card>
+  <Card title="Event details" icon="circle-info">
+    See titles, dates, and thumbnails for each event
+  </Card>
+</CardGroup>
+
+## Watching live events
+
+When an event is streaming live, you have multiple ways to tune in:
+
+<Steps>
+  <Step title="Access the live page">
+    Navigate to the Live Events section from the main navigation menu or visit `/live` directly
+  </Step>
+  
+  <Step title="Choose your platform">
+    You can watch directly on the BLACC platform using the embedded player, or click through to watch on Twitch or YouTube
+    
+    <CodeGroup>
+    ```jsx Platform buttons
+    <CTA
+      bg="#9147ff"
+      shadow="rgba(145, 71, 255, 0.5)"
+      href="https://www.twitch.tv/blacc_xyz"
+      target="_blank"
+    >
+      <ImTwitch />
+      <Label>Watch Live on Twitch</Label>
+    </CTA>
+    
+    <CTA
+      bg="#ff0202"
+      shadow="rgba(255, 2, 2, 0.5)"
+      href="https://www.youtube.com/channel/UCaTP89xCILPWN9qfA9Ike2A"
+      target="_blank"
+    >
+      <ImYoutube />
+      <Label>Watch Live on Youtube</Label>
+    </CTA>
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Engage with the stream">
+    Interact with the community through chat on your chosen platform
+  </Step>
+</Steps>
+
+<Note>
+  All streams are broadcasted to multiple platforms simultaneously using Restream, ensuring you never miss an event regardless of your preferred platform.
+</Note>
+
+## Embedded video player
+
+The BLACC platform features an embedded Restream player that allows you to watch live events without leaving the site:
+
+```jsx Restream integration
+<IframeContainer>
+  <iframe
+    src="https://embed.restream.io/player/index.html?token=e2022a75ef752141417cf11887150a39"
+    width={width}
+    height={height}
+    frameBorder="0"
+    allowFullScreen
+  />
+</IframeContainer>
+```
+
+The player automatically adjusts to your screen size and supports fullscreen viewing for an immersive experience.
+
+<Tip>
+  The embedded player is fully responsive and optimized for both desktop and mobile viewing experiences.
+</Tip>
+
+## Upcoming events
+
+The upcoming events section displays currently live or scheduled events:
+
+<CodeGroup>
+```jsx Event component
+<Event
+  img='/twitch.PNG'
+  title='Building with the Twitch API and Github Actions'
+  date='May 8th, 2021'
+  url='https://www.twitch.tv/blacc_xyz'
+  live
+/>
+```
+
+```jsx LiveEvents component
+export default function LiveEvents() {
+  return (
+    <Container>
+      <Title>Upcoming Events</Title>
+      <Wrapper>
+        <Event
+          img='/twitch.PNG'
+          title='Building with the Twitch API and Github Actions'
+          date='May 8th, 2021'
+          url='https://www.twitch.tv/blacc_xyz'
+          live
+        />
+      </Wrapper>
+    </Container>
+  );
+}
+```
+</CodeGroup>
+
+Each event card displays:
+- Event thumbnail image
+- Event title
+- Scheduled date and time
+- "WATCH LIVE" button when streaming
+
+## Past events archive
+
+Browse recordings of previous live sessions in the past events section:
+
+```jsx PastEvents component
+export default function PastEvents() {
+  return (
+    <Container>
+      <Title>Past Events</Title>
+      <Wrapper>
+        <Event
+          img='/4_25_21.png'
+          title='Getting Started with The Google Assistant'
+          date='Apr 25, 2021'
+          url='https://www.youtube.com/watch?v=csYiYlVcuO0'
+        />
+        <Event
+          img='/4_10_21.png'
+          title='Whiteness in Digital Products'
+          date='Apr 10, 2021'
+          url='https://www.youtube.com/watch?v=PSXEQ4X5T20'
+        />
+        <Event
+          img='/2_21_21.jpg'
+          title='Live Coding Session: React + Firebase'
+          date='Feb 21, 2021'
+          url='https://www.youtube.com/watch?v=IJxaRsUtY-8'
+        />
+      </Wrapper>
+    </Container>
+  );
+}
+```
+
+Each past event includes:
+- Event recording thumbnail
+- Full event title
+- Original air date
+- "VIEW RECORDING" button linking to YouTube
+
+## Event card component
+
+The Event component provides a consistent UI for displaying both live and past events:
+
+<CodeGroup>
+```jsx Event structure
+export default function Event({ img, title, date, url, live }) {
+  return (
+    <Container>
+      <Img>
+        <Image src={img} layout='fill' objectFit='cover' />
+      </Img>
+      <Details>
+        <Metadata>
+          <Title>{title}</Title>
+          {url && <Date>{date}</Date>}
+        </Metadata>
+        {!url ? (
+          <CTA>{date}</CTA>
+        ) : !live ? (
+          <CTA href={url} target='_blank'>
+            VIEW RECORDING
+          </CTA>
+        ) : (
+          <CTA href={url} target='_blank'>
+            WATCH LIVE
+          </CTA>
+        )}
+      </Details>
+    </Container>
+  );
+}
+```
+
+```jsx Props
+{
+  img: string,        // Path to event thumbnail
+  title: string,      // Event title
+  date: string,       // Event date
+  url: string,        // Link to stream or recording
+  live: boolean       // Whether event is currently live
+}
+```
+</CodeGroup>
+
+The component intelligently renders different CTAs based on the event state:
+- **Live event**: "WATCH LIVE" button
+- **Past event**: "VIEW RECORDING" button  
+- **Scheduled event**: Displays date only
+
+## Page layout
+
+The live events page uses a responsive grid layout:
+
+```jsx Page structure
+export default function Live() {
+  const container = useRef(null);
+  const [height, setHeight] = useState(0);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (container?.current) {
+      setHeight(container.current.offsetHeight);
+      setWidth(container.current.offsetWidth);
+    }
+  }, [container]);
+
+  return (
+    <Container ref={container}>
+      {!width || !height ? (
+        <p>Loading</p>
+      ) : (
+        <Wrapper>
+          <LiveEvents />
+          <PastEvents />
+        </Wrapper>
+      )}
+    </Container>
+  );
+}
+```
+
+<Note>
+  The page measures container dimensions on load to ensure the embedded video player renders at the optimal size.
+</Note>
+
+## Responsive behavior
+
+The live events page adapts to different screen sizes:
+
+```jsx Responsive styling
+const Container = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const Event = styled.div`
+  padding: 16px;
+
+  @media (max-width: 600px) {
+    padding: 0px;
+    display: block;
+  }
+`;
+```
+
+**Desktop**: Side-by-side layout with video player and platform buttons
+**Mobile**: Stacked layout with full-width video player
+
+## SEO and social sharing
+
+The live events page includes optimized meta tags:
+
+```jsx Meta tags
+<Head>
+  <title>Live Events w/BLACC</title>
+  <meta
+    name="description"
+    content="Check out what we're up to! Stay in the know about our live coding sessions and podcasts!"
+  />
+  <meta property="og:url" content="https://blacc.xyz/live" />
+  <meta property="og:title" content="Live Events w/BLACC" />
+  <meta property="og:image" content="/blacc_live.png" />
+</Head>
+```
+
+<Warning>
+  Ensure event thumbnails are properly sized and optimized to maintain fast page load times, especially on mobile devices.
+</Warning>
+
+## Related features
+
+<CardGroup cols={2}>
+  <Card title="Video submissions" icon="upload" href="/features/video-submissions">
+    Learn how to submit your own content to the BLACC YouTube channel
+  </Card>
+  <Card title="Discord integration" icon="discord" href="/features/discord-integration">
+    Join the Discord community to get notified about upcoming events
+  </Card>
+</CardGroup>

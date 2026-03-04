@@ -1,0 +1,201 @@
+---
+title: Deployment overview
+description: Learn about deployment options and considerations for the BLACC Community Platform
+---
+
+The BLACC Community Platform is a Next.js application that can be deployed to various hosting providers. This guide covers deployment considerations and best practices.
+
+## Architecture overview
+
+The platform is built with:
+
+- **Next.js 10.0.5** - React framework with server-side rendering
+- **Firebase** - Backend services for storage and database
+- **Node.js** - Runtime environment
+
+The application includes:
+
+- Server-side rendered pages
+- Firebase Firestore for data storage
+- Firebase Storage for video uploads
+- Custom redirects configuration
+
+## Deployment options
+
+### Vercel (recommended)
+
+Vercel is the recommended platform for deploying Next.js applications. It offers:
+
+<Card title="Vercel deployment" icon="rocket" href="/deployment/vercel">
+  Step-by-step guide for deploying to Vercel
+</Card>
+
+**Benefits:**
+- Zero-configuration Next.js deployment
+- Automatic HTTPS and CDN
+- Serverless function support
+- Preview deployments for pull requests
+- Built-in performance monitoring
+
+### Alternative platforms
+
+You can also deploy the platform to:
+
+- **Netlify** - Similar to Vercel with good Next.js support
+- **AWS Amplify** - Full-featured AWS integration
+- **Docker** - Containerized deployment for self-hosting
+- **Traditional Node.js hosting** - Any platform supporting Node.js
+
+## Build requirements
+
+<Steps>
+
+<Step title="Install dependencies">
+  ```bash
+  npm install
+  # or
+  yarn install
+  ```
+</Step>
+
+<Step title="Configure environment variables">
+  Set up required Firebase configuration variables. See the [environment variables](/deployment/environment-variables) guide.
+</Step>
+
+<Step title="Build the application">
+  ```bash
+  npm run build
+  # or
+  yarn build
+  ```
+  
+  This creates an optimized production build in the `.next` directory.
+</Step>
+
+<Step title="Start the production server">
+  ```bash
+  npm start
+  # or
+  yarn start
+  ```
+  
+  The application will run on port 3000 by default.
+</Step>
+
+</Steps>
+
+## Configuration files
+
+### next.config.js
+
+The project includes a `next.config.js` file that configures custom redirects:
+
+```javascript lib/config.js
+module.exports = {
+  async redirects() {
+    return [
+      {
+        source: '/discord',
+        destination: 'https://discord.gg/9Bh3TZ2',
+        permanent: true,
+      },
+    ];
+  },
+};
+```
+
+This configuration redirects `/discord` to the community Discord server.
+
+### package.json scripts
+
+The following npm scripts are available:
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm start` - Start production server
+
+## Pre-deployment checklist
+
+Before deploying to production, ensure you have:
+
+<Steps>
+
+<Step title="Environment variables configured">
+  All required Firebase environment variables must be set. See [environment variables](/deployment/environment-variables).
+</Step>
+
+<Step title="Firebase project setup">
+  Your Firebase project should have:
+  - Firestore database enabled
+  - Storage bucket configured
+  - Authentication rules set up (if applicable)
+</Step>
+
+<Step title="Test the build locally">
+  ```bash
+  npm run build && npm start
+  ```
+  
+  Verify the application runs correctly in production mode.
+</Step>
+
+<Step title="Review security rules">
+  Check Firebase security rules for Firestore and Storage to ensure proper access control.
+</Step>
+
+</Steps>
+
+<Note>
+  The platform uses Firebase for backend services. Make sure your Firebase project is properly configured before deployment.
+</Note>
+
+## Performance considerations
+
+### Static optimization
+
+Next.js automatically optimizes pages that don't require server-side data:
+
+- Pages without `getServerSideProps` or `getInitialProps` are statically optimized
+- Static pages are served faster with lower server costs
+
+### Image optimization
+
+Consider implementing Next.js Image component for automatic image optimization:
+
+```jsx
+import Image from 'next/image'
+
+<Image src="/logo.png" width={200} height={100} />
+```
+
+### Caching strategy
+
+Vercel and similar platforms automatically handle caching for:
+
+- Static assets (CSS, JS, images)
+- API responses (with proper cache headers)
+- Static pages
+
+## Monitoring and debugging
+
+After deployment:
+
+<Tip>
+  Enable Firebase monitoring to track database operations, storage usage, and potential errors.
+</Tip>
+
+- Check deployment logs for build errors
+- Monitor Firebase quota usage
+- Set up error tracking (e.g., Sentry)
+- Review performance metrics
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Environment variables" icon="key" href="/deployment/environment-variables">
+    Configure Firebase and other environment variables
+  </Card>
+  <Card title="Deploy to Vercel" icon="rocket" href="/deployment/vercel">
+    Follow the step-by-step Vercel deployment guide
+  </Card>
+</CardGroup>

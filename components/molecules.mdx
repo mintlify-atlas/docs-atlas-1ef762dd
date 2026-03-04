@@ -1,0 +1,390 @@
+---
+title: Molecular components
+description: Explore the molecular components that combine atoms to create rich, interactive features in the BLACC Community Platform
+---
+
+Molecular components are composed of multiple atomic components and handle more complex UI patterns. They manage their own state and business logic while providing rich interactive experiences.
+
+## FormSubmission
+
+The `FormSubmission` component provides a complete form interface for uploading video submissions with metadata. It includes input fields, tag selection, and an animated upload progress indicator.
+
+### Usage
+
+```jsx
+import FormSubmission from '../components/molecules/FormSubmission';
+import { useState } from 'react';
+
+function UploadPage() {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [username, setUsername] = useState('');
+  const [chosenTags, setChosenTags] = useState([]);
+  const [progress, setProgress] = useState(0);
+
+  const handleSubmit = async () => {
+    // Upload logic here
+  };
+
+  return (
+    <FormSubmission
+      title={title}
+      setTitle={setTitle}
+      description={description}
+      setDescription={setDescription}
+      username={username}
+      setUsername={setUsername}
+      chosenTags={chosenTags}
+      setChosenTags={setChosenTags}
+      progress={progress}
+      onSubmit={handleSubmit}
+    />
+  );
+}
+```
+
+### Props
+
+<ResponseField name="title" type="string" required>
+  Current value of the video title input.
+</ResponseField>
+
+<ResponseField name="setTitle" type="function" required>
+  State setter function for the title.
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  Current value of the video description textarea.
+</ResponseField>
+
+<ResponseField name="setDescription" type="function" required>
+  State setter function for the description.
+</ResponseField>
+
+<ResponseField name="username" type="string" required>
+  Current value of the Discord username input.
+</ResponseField>
+
+<ResponseField name="setUsername" type="function" required>
+  State setter function for the username.
+</ResponseField>
+
+<ResponseField name="chosenTags" type="string[]" required>
+  Array of selected tags from the available tag options.
+</ResponseField>
+
+<ResponseField name="setChosenTags" type="function" required>
+  State setter function for the tags array.
+</ResponseField>
+
+<ResponseField name="progress" type="number" required>
+  Upload progress percentage (0-100). When >= 100, displays success state.
+</ResponseField>
+
+<ResponseField name="onSubmit" type="function" required>
+  Callback function triggered when the upload button is clicked.
+</ResponseField>
+
+### Features
+
+<Steps>
+  <Step title="Input fields">
+    Two text inputs for Discord username and video title, styled with rounded corners and light gray background.
+  </Step>
+  
+  <Step title="Textarea description">
+    Larger textarea (100px height) for video description with no resize capability.
+  </Step>
+  
+  <Step title="Tag selection">
+    Interactive tag chips from the predefined tags list. Tags animate on hover and toggle selection state.
+  </Step>
+  
+  <Step title="Progress indicator">
+    Animated progress bar overlays the submit button, turning green when complete.
+  </Step>
+</Steps>
+
+### Tag system
+
+The component imports tags from `constants.js` which includes categories like:
+
+- Programming languages (JavaScript, Python, C++, Java, etc.)
+- Frameworks (React, Angular, Vue, Node.js, etc.)
+- Topics (Databases, Cybersecurity, IoT, APIs, etc.)
+
+Tags are styled with conditional backgrounds:
+
+```jsx
+${({ chosen }) =>
+  chosen
+    ? `background: #000; color: #fff;`
+    : `background: #eeeeee; color: #525456;`}
+```
+
+<Tip>
+  The tag selection logic at `components/molecules/FormSubmission.js:201` handles adding and removing tags from the array using a filter-based approach.
+</Tip>
+
+### Reference
+
+See the full implementation at `components/molecules/FormSubmission.js:189`
+
+## LiveEvents
+
+The `LiveEvents` component displays upcoming or currently live events in a clean, list-based layout. It composes the atomic `Event` component to show event details.
+
+### Usage
+
+```jsx
+import LiveEvents from '../components/molecules/LiveEvents';
+
+function LivePage() {
+  return <LiveEvents />;
+}
+```
+
+### Structure
+
+The component provides:
+
+- **Container**: Full-width section with black background and padding
+- **Title**: "Upcoming Events" heading (36px, bold)
+- **Wrapper**: Grid layout with vertical spacing between events
+- **Event cards**: Uses the Event atom component with `live={true}` prop
+
+<Note>
+  Currently, the component renders static event data. In a production implementation, you would fetch events from an API and map over the results.
+</Note>
+
+### Example implementation
+
+```jsx
+<Event
+  img='/twitch.PNG'
+  title='Building with the Twitch API and Github Actions'
+  date='May 8th, 2021'
+  url='https://www.twitch.tv/blacc_xyz'
+  live
+/>
+```
+
+### Reference
+
+See the full implementation at `components/molecules/LiveEvents.js:25`
+
+## PastEvents
+
+The `PastEvents` component displays a grid of previous community events with links to their recordings. It mirrors the structure of `LiveEvents` but shows historical content.
+
+### Usage
+
+```jsx
+import PastEvents from '../components/molecules/PastEvents';
+
+function HomePage() {
+  return <PastEvents />;
+}
+```
+
+### Features
+
+- Same styling as LiveEvents for consistency
+- Title displays "Past Events"
+- Event components link to YouTube recordings
+- No `live` prop passed to Event components
+
+### Example events
+
+The component includes recordings of past sessions:
+
+<CodeGroup>
+```jsx Google Assistant Event
+<Event
+  img='/4_25_21.png'
+  title='Getting Started with The Google Assistant'
+  date='Apr 25, 2021'
+  url='https://www.youtube.com/watch?v=csYiYlVcuO0'
+/>
+```
+
+```jsx React + Firebase Event
+<Event
+  img='/2_21_21.jpg'
+  title='Live Coding Session: React + Firebase'
+  date='Feb 21, 2021'
+  url='https://www.youtube.com/watch?v=IJxaRsUtY-8'
+/>
+```
+</CodeGroup>
+
+### Reference
+
+See the full implementation at `components/molecules/PastEvents.js:24`
+
+## VideoContainer
+
+The `VideoContainer` component provides a drag-and-drop style file upload interface specifically for video files. It features visual feedback and file type validation.
+
+### Usage
+
+```jsx
+import VideoContainer from '../components/molecules/VideoContainer';
+import { useState } from 'react';
+
+function UploadPage() {
+  const [video, setVideo] = useState(null);
+
+  return (
+    <VideoContainer
+      video={video}
+      setVideo={setVideo}
+    />
+  );
+}
+```
+
+### Props
+
+<ResponseField name="video" type="File">
+  The selected video file object, or `null` if no file is selected.
+</ResponseField>
+
+<ResponseField name="setVideo" type="function" required>
+  State setter function called when a video file is selected.
+</ResponseField>
+
+### Visual states
+
+<Steps>
+  <Step title="Empty state">
+    Light gray background with dashed border, cloud upload icon, and "Upload your video" text.
+  </Step>
+  
+  <Step title="File selected">
+    Transforms to black background with box shadow, elevates with translateY(-15px), shows cloud_done icon and filename.
+  </Step>
+</Steps>
+
+### File validation
+
+The component validates that uploaded files are video types:
+
+```jsx
+onChange={({ target }) => {
+  if (!target.files[0]?.type.startsWith('video')) return;
+  setTimeout(() => setVideo(target.files[0]), 500);
+}}
+```
+
+<Warning>
+  The component adds a 500ms delay before setting the video state to allow for smooth visual transitions. Consider this timing when implementing loading states.
+</Warning>
+
+### Interaction pattern
+
+The entire container acts as a clickable area that triggers the hidden file input:
+
+```jsx
+<Container onClick={() => inputRef.current.click()} hasVideo={video}>
+  {/* Content */}
+  <FileUpload type="file" ref={inputRef} accept="video/*" />
+</Container>
+```
+
+### Reference
+
+See the full implementation at `components/molecules/VideoContainer.js:71`
+
+## LivestreamContainer
+
+The `LivestreamContainer` component embeds a Restream.io player and provides call-to-action buttons for Twitch and YouTube platforms. It creates a split-screen layout on desktop and stacks vertically on mobile.
+
+### Usage
+
+```jsx
+import LivestreamContainer from '../components/molecules/LivestreamContainer';
+
+function LivePage() {
+  return (
+    <LivestreamContainer
+      width="100%"
+      height="100%"
+    />
+  );
+}
+```
+
+### Props
+
+<ResponseField name="width" type="string" required>
+  Width value passed to the iframe element.
+</ResponseField>
+
+<ResponseField name="height" type="string" required>
+  Height value passed to the iframe element.
+</ResponseField>
+
+### Layout
+
+The component uses a two-column grid layout:
+
+- **Left column**: Restream.io iframe player with 75% width and 40% height constraints
+- **Right column**: Stacked CTA buttons for Twitch and YouTube
+
+### Platform CTAs
+
+<Card title="Twitch CTA" icon="twitch">
+  Purple branded button (#9147ff) with Twitch icon and "Watch Live on Twitch" label.
+</Card>
+
+<Card title="YouTube CTA" icon="youtube">
+  Red branded button (#ff0202) with YouTube icon and "Watch Live on Youtube" label.
+</Card>
+
+Both buttons feature colored box shadows that match their brand colors.
+
+### Responsive behavior
+
+<Note>
+  On mobile (max-width: 600px), the grid switches to a single column layout, the iframe container expands to 85% width and height, and CTAs adjust their positioning.
+</Note>
+
+### Reference
+
+See the full implementation at `components/molecules/LivestreamContainer.js:72`
+
+## UpcomingEvent
+
+The `UpcomingEvent` component creates a hero-style section for promoting future events. It uses a two-column layout with promotional imagery and call-to-action elements.
+
+### Usage
+
+```jsx
+import UpcomingEvent from '../components/molecules/UpcomingEvent';
+
+function HomePage() {
+  return <UpcomingEvent />;
+}
+```
+
+### Structure
+
+- **Left container**: Title and decorative undraw illustration
+- **Right container**: Event promotional image
+- **CTAs**: Currently commented out, intended for "JOIN EVENT" functionality
+
+<Tip>
+  The component includes commented-out CTA buttons (lines 138-153) that can be enabled when an event is scheduled. The design supports both active links and disabled states with tooltips.
+</Tip>
+
+### Responsive design
+
+On mobile devices:
+- Grid switches from two columns to one
+- Padding reduces from 64px to 24px
+- Undraw illustration hides on small screens
+
+### Reference
+
+See the full implementation at `components/molecules/UpcomingEvent.js:132`

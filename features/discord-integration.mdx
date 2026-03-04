@@ -1,0 +1,377 @@
+---
+title: Discord integration
+description: Connect with the BLACC community through seamless Discord integration
+---
+
+The BLACC platform features deep Discord integration, providing multiple touchpoints for community members to connect, engage, and stay informed about platform activities.
+
+## Overview
+
+Discord serves as the primary communication hub for the BLACC community. The platform integrates Discord in several ways to create a seamless experience between the web platform and the community server.
+
+### Integration points
+
+<CardGroup cols={2}>
+  <Card title="Embedded widget" icon="window">
+    Live Discord widget showing online members and server activity
+  </Card>
+  <Card title="Direct links" icon="link">
+    One-click access to join the Discord server from anywhere on the platform
+  </Card>
+  <Card title="User attribution" icon="user-tag">
+    Discord usernames used to credit video submissions and contributions
+  </Card>
+  <Card title="Community CTA" icon="users">
+    Prominent "Join our community" call-to-action on the home page
+  </Card>
+</CardGroup>
+
+## Discord widget
+
+The platform features an interactive Discord widget that appears on the home page, providing real-time visibility into community activity.
+
+### Widget features
+
+<Steps>
+  <Step title="Real-time status">
+    See which community members are currently online and active
+  </Step>
+  
+  <Step title="Interactive display">
+    Click to expand or collapse the widget for more or less information
+  </Step>
+  
+  <Step title="Quick join">
+    Join the server directly from the widget without leaving the platform
+  </Step>
+</Steps>
+
+### Implementation
+
+The widget uses Discord's official embed API:
+
+<CodeGroup>
+```jsx Widget component
+const Widget = styled.div`
+  z-index: 10;
+  position: fixed;
+  cursor: pointer;
+  bottom: 32px;
+  right: 48px;
+  transition: all 0.3s;
+  height: ${({ open }) => (open ? '50%' : '74px')};
+  display: inline-block;
+
+  @media (max-width: 600px) {
+    right: 24px;
+    width: calc(100% - 48px);
+  }
+`;
+
+<Widget open={openWidget}>
+  <Click onClick={() => setOpenWidget(!openWidget)} />
+  <iframe
+    src="https://discord.com/widget?id=769610692297752586&theme=dark"
+    width="100%"
+    height="100%"
+    allowtransparency="true"
+    frameBorder="0"
+    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+  ></iframe>
+</Widget>
+```
+
+```jsx State management
+const [openWidget, setOpenWidget] = useState(false);
+
+// Toggle widget open/closed
+const toggleWidget = () => setOpenWidget(!openWidget);
+```
+</CodeGroup>
+
+The widget is:
+- Fixed to the bottom-right corner of the viewport
+- Expandable from 74px to 50% screen height
+- Fully responsive on mobile devices
+- Styled with dark theme to match the platform aesthetic
+
+<Note>
+  The widget requires the Discord server ID (769610692297752586) and must have the widget feature enabled in server settings.
+</Note>
+
+## Join links
+
+Multiple entry points throughout the platform direct users to join the Discord community:
+
+### Home page CTA
+
+Primary call-to-action button on the landing page:
+
+```jsx Community CTA
+<CTA href="https://discord.gg/9Bh3TZ2" target="_blank">
+  Join our community
+</CTA>
+```
+
+The button:
+- Uses Discord's vanity invite URL for easy sharing
+- Opens in a new tab to preserve user's place on the platform
+- Features hover effects for better interactivity
+
+### Navigation menu
+
+On mobile devices, the Discord join link is accessible from the hamburger menu:
+
+```jsx Mobile menu integration
+<MenuContainer show={showMenu}>
+  <Link href="/">
+    <MenuItem active={router.route === '/'}>
+      <Icon className="material-icons">home</Icon>
+      <MenuLabel>Home</MenuLabel>
+    </MenuItem>
+  </Link>
+  {/* Other menu items */}
+</MenuContainer>
+```
+
+<Tip>
+  The invite link uses Discord's permanent invite format to ensure it never expires.
+</Tip>
+
+## Discord username attribution
+
+When submitting videos to the platform, users provide their Discord username for attribution and communication:
+
+### Submission form
+
+```jsx Discord username field
+<Input
+  type="text"
+  placeholder="Discord Username"
+  value={username}
+  onChange={(e) => setUsername(e.target.value)}
+/>
+```
+
+### Stored with submission
+
+Usernames are stored in two locations:
+
+1. **Firebase Storage metadata**: Attached to the video file itself
+```jsx
+const uploadTask = submissionsRef.put(video, {
+  customMetadata: { username, title },
+});
+```
+
+2. **Firestore document**: Stored with the submission record for easy querying
+```jsx
+firestore.collection('youtubeSubmissions').add({
+  title,
+  storageId,
+  description,
+  tags: chosenTags,
+  video: downloadURL,
+  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+});
+```
+
+<Note>
+  While the username is stored in metadata, it's not included in the Firestore document in the current implementation. Consider adding it if you need to query by username.
+</Note>
+
+### Why Discord usernames?
+
+<CardGroup cols={2}>
+  <Card title="Community connection" icon="handshake">
+    Links platform contributions directly to Discord community members
+  </Card>
+  <Card title="Easy communication" icon="comments">
+    Allows the team to reach out with questions or updates about submissions
+  </Card>
+  <Card title="Credit and recognition" icon="award">
+    Ensures creators receive proper credit when videos are published
+  </Card>
+  <Card title="Single identity" icon="id-card">
+    Maintains consistent identity across platform and community
+  </Card>
+</CardGroup>
+
+## Widget configuration
+
+To set up the Discord widget for your own server:
+
+<Steps>
+  <Step title="Enable widget in Discord">
+    Go to Server Settings > Widget and enable the widget feature
+  </Step>
+  
+  <Step title="Get server ID">
+    Copy your Discord server ID from the widget settings page
+  </Step>
+  
+  <Step title="Update platform code">
+    Replace the server ID in the iframe src:
+    
+    ```jsx
+    <iframe
+      src="https://discord.com/widget?id=YOUR_SERVER_ID&theme=dark"
+      // ... other props
+    ></iframe>
+    ```
+  </Step>
+  
+  <Step title="Customize appearance">
+    Adjust widget size, position, and styling to match your design
+  </Step>
+</Steps>
+
+<Warning>
+  Make sure your Discord server has the widget feature enabled in server settings, or the embed will not work.
+</Warning>
+
+## Responsive behavior
+
+The Discord widget adapts to different screen sizes:
+
+```jsx Responsive styling
+const Widget = styled.div`
+  position: fixed;
+  bottom: 32px;
+  right: 48px;
+  height: ${({ open }) => (open ? '50%' : '74px')};
+  display: inline-block;
+
+  @media (max-width: 600px) {
+    right: 24px;
+    width: calc(100% - 48px);
+  }
+`;
+```
+
+**Desktop**:
+- Fixed width based on content
+- Positioned in bottom-right corner
+- Expands to 50% screen height when open
+
+**Mobile**:
+- Full width minus padding
+- Maintains bottom positioning
+- Smaller collapsed height for better mobile UX
+
+## Security considerations
+
+The widget iframe includes security attributes:
+
+```jsx Security settings
+<iframe
+  src="https://discord.com/widget?id=769610692297752586&theme=dark"
+  allowtransparency="true"
+  frameBorder="0"
+  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+></iframe>
+```
+
+The sandbox attribute:
+- `allow-popups`: Allows joining the server in a new tab
+- `allow-popups-to-escape-sandbox`: Allows Discord login flow
+- `allow-same-origin`: Required for widget functionality
+- `allow-scripts`: Enables interactive features
+
+<Warning>
+  Do not remove sandbox attributes without understanding the security implications. These settings balance functionality with security.
+</Warning>
+
+## Community engagement
+
+The Discord integration serves multiple purposes in building community:
+
+### Visibility
+
+Showing online members creates social proof and encourages participation:
+- New visitors see an active community
+- Members can see friends and peers online
+- Real-time activity demonstrates platform vitality
+
+### Accessibility
+
+Multiple entry points reduce friction to joining:
+- Home page CTA for first-time visitors
+- Widget for returning users
+- Navigation menu for mobile users
+
+### Attribution
+
+Linking Discord usernames to contributions:
+- Builds creator reputation within the community
+- Enables recognition and feedback
+- Fosters accountability and quality
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Keep invite links updated" icon="link">
+    Regularly check that Discord invite links are active and not expired
+  </Card>
+  <Card title="Monitor widget status" icon="chart-line">
+    Ensure the widget is functioning and showing accurate member counts
+  </Card>
+  <Card title="Encourage Discord signup" icon="bullhorn">
+    Promote the Discord community in video submissions and live events
+  </Card>
+  <Card title="Moderate actively" icon="shield">
+    Maintain a welcoming Discord community to match the platform's values
+  </Card>
+</CardGroup>
+
+## Customization options
+
+You can customize the Discord widget appearance:
+
+### Theme
+
+```jsx
+// Dark theme (current)
+src="https://discord.com/widget?id=SERVER_ID&theme=dark"
+
+// Light theme
+src="https://discord.com/widget?id=SERVER_ID&theme=light"
+```
+
+### Size
+
+Adjust the widget dimensions in the styled component:
+
+```jsx
+const Widget = styled.div`
+  height: ${({ open }) => (open ? '50%' : '74px')}; // Adjust these values
+  // ... other styles
+`;
+```
+
+### Position
+
+Change the widget position:
+
+```jsx
+const Widget = styled.div`
+  bottom: 32px;  // Distance from bottom
+  right: 48px;   // Distance from right
+  // Change to left, top as needed
+`;
+```
+
+<Tip>
+  Test widget customizations on both desktop and mobile devices to ensure a consistent experience across screen sizes.
+</Tip>
+
+## Related features
+
+<CardGroup cols={2}>
+  <Card title="Community hub" icon="users" href="/features/community">
+    Learn more about the BLACC community and its mission
+  </Card>
+  <Card title="Video submissions" icon="upload" href="/features/video-submissions">
+    See how Discord usernames are used for contributor attribution
+  </Card>
+</CardGroup>

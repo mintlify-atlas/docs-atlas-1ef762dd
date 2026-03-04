@@ -1,0 +1,418 @@
+---
+title: Video submissions
+description: Upload your technical videos to be featured on the BLACC YouTube channel
+---
+
+The video submission feature allows community members to contribute their own technical content to the BLACC YouTube channel. Submit tutorials, coding sessions, or technical talks to share your knowledge with the community.
+
+## Overview
+
+The upload page at `/upload` provides a streamlined workflow for submitting video content. Videos are uploaded to Firebase Storage and queued for review before being published to the official BLACC YouTube channel.
+
+### Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="Easy uploads" icon="cloud-arrow-up">
+    Drag-and-drop or click to upload video files directly from your browser
+  </Card>
+  <Card title="Rich metadata" icon="tags">
+    Add titles, descriptions, and tags to help viewers find your content
+  </Card>
+  <Card title="Progress tracking" icon="chart-line">
+    Real-time upload progress with visual feedback
+  </Card>
+  <Card title="Tech categories" icon="code">
+    Tag your videos with 28+ technology categories from JavaScript to IoT
+  </Card>
+</CardGroup>
+
+## Submission workflow
+
+Follow these steps to submit your video to the BLACC YouTube channel:
+
+<Steps>
+  <Step title="Navigate to upload page">
+    Click on the upload option or navigate to `/upload` to access the submission form
+  </Step>
+  
+  <Step title="Upload your video">
+    Click the upload area or drag and drop your video file. The platform accepts all standard video formats.
+    
+    ```jsx Video upload component
+    <Container onClick={() => inputRef.current.click()} hasVideo={video}>
+      <MessageContainer>
+        <Icon className="material-icons" color={video ? '#fff' : '#525456'}>
+          cloud_{video ? 'done' : 'upload'}
+        </Icon>
+        <Message color={video ? '#fff' : '#525456'}>
+          {video ? video.name : 'Upload your video'}
+        </Message>
+      </MessageContainer>
+      <FileUpload
+        type="file"
+        ref={inputRef}
+        accept="video/*"
+        onChange={({ target }) => {
+          if (!target.files[0]?.type.startsWith('video')) return;
+          setTimeout(() => setVideo(target.files[0]), 500);
+        }}
+      />
+    </Container>
+    ```
+  </Step>
+  
+  <Step title="Fill in video details">
+    Provide your Discord username, video title, and a detailed description of what viewers will learn
+  </Step>
+  
+  <Step title="Select relevant tags">
+    Choose one or more technology tags that describe your video content. Tags help viewers discover content relevant to their interests.
+    
+    <Note>
+      You must select at least one tag before submitting your video.
+    </Note>
+  </Step>
+  
+  <Step title="Submit your video">
+    Click the "UPLOAD SUBMISSION" button to start the upload process. A progress bar will show the upload status.
+  </Step>
+  
+  <Step title="Wait for confirmation">
+    Once upload completes, you'll see a success message. The BLACC team will review your submission before publishing to YouTube.
+  </Step>
+</Steps>
+
+## Form fields
+
+The submission form requires the following information:
+
+### Discord username
+
+Your Discord username so the team can credit you and reach out if needed:
+
+```jsx
+<Input
+  type="text"
+  placeholder="Discord Username"
+  value={username}
+  onChange={(e) => setUsername(e.target.value)}
+/>
+```
+
+### Video title
+
+A clear, descriptive title for your video:
+
+```jsx
+<Input
+  type="text"
+  placeholder="Video Title"
+  value={title}
+  onChange={(e) => setTitle(e.target.value)}
+/>
+```
+
+### Description
+
+A detailed description of your video content:
+
+```jsx
+<Description
+  placeholder="Video Description"
+  value={description}
+  onChange={(e) => setDescription(e.target.value)}
+/>
+```
+
+<Tip>
+  Write a comprehensive description that explains what viewers will learn and any prerequisites they should know.
+</Tip>
+
+### Technology tags
+
+Select one or more tags from 28+ available categories:
+
+```jsx Available tags
+const tags = [
+  'user experience',
+  'cpp',
+  'html/css',
+  'java',
+  'javascript',
+  'objective-c',
+  'python',
+  'c-sharp',
+  'angular',
+  'react',
+  'vue',
+  'web hosting',
+  'ci/cd',
+  'cybersecurity',
+  'databases',
+  'express.js',
+  'java spring',
+  'node.js',
+  'flutter',
+  'android studio',
+  'react native',
+  'swift/xcode',
+  'graphql',
+  'helpful apis',
+  'REST',
+  'iot',
+  'raspberry pi',
+  'arduino',
+];
+```
+
+Tags are rendered as interactive pills that can be toggled on/off:
+
+```jsx Tag selection
+const handleTags = (tag) => {
+  if (chosenTags.includes(tag))
+    setChosenTags(chosenTags.filter((el) => el !== tag));
+  else setChosenTags([...chosenTags, tag]);
+};
+
+<TagsContainer>
+  {tags.map((el, idx) => (
+    <Tag
+      key={idx}
+      chosen={chosenTags.includes(el)}
+      onClick={() => handleTags(el)}
+    >
+      {el}
+    </Tag>
+  ))}
+</TagsContainer>
+```
+
+## Upload process
+
+The platform uses Firebase Storage for video uploads with real-time progress tracking:
+
+<CodeGroup>
+```jsx Upload handler
+const uploadSubmission = async () => {
+  if (validateInputs()) {
+    uploadVideoToStorage({
+      video,
+      username,
+      title,
+      description,
+      chosenTags,
+      updateProgress: setProgress,
+      onComplete: clearData,
+    });
+  }
+};
+```
+
+```jsx Firebase upload
+export const uploadVideoToStorage = ({
+  video,
+  title,
+  username,
+  description,
+  chosenTags,
+  updateProgress,
+  onComplete,
+}) => {
+  const storageId = uuidv4();
+  const submissionsRef = storage.ref(`youtubeSubmissions/${storageId}`);
+  const uploadTask = submissionsRef.put(video, {
+    customMetadata: { username, title },
+  });
+
+  uploadTask.on(
+    'state_changed',
+    (snapshot) => {
+      const progress =
+        (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      updateProgress(Math.round(progress));
+    },
+    (err) => {
+      throw new Error(`uploadVideoToStorage: ${err.toString()}`);
+    },
+    () => {
+      uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+        firestore
+          .collection('youtubeSubmissions')
+          .add({
+            title,
+            storageId,
+            description,
+            tags: chosenTags,
+            video: downloadURL,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          })
+          .then(() => setTimeout(() => onComplete(), 1000));
+      });
+    }
+  );
+};
+```
+</CodeGroup>
+
+The upload process:
+1. Generates a unique ID for the video using UUID
+2. Uploads the video file to Firebase Storage with metadata
+3. Tracks upload progress and updates the UI in real-time
+4. Creates a Firestore document with video metadata and download URL
+5. Shows success confirmation when complete
+
+<Note>
+  Videos are stored with a unique identifier to prevent filename conflicts and ensure proper organization.
+</Note>
+
+## Progress indicator
+
+A visual progress bar shows upload status:
+
+```jsx Progress UI
+<CTAWrapper onClick={onSubmit}>
+  <CTA>UPLOAD SUBMISSION</CTA>
+  <Progress progress={progress}>
+    <ProgressWrapper show={progress > 99}>
+      <Icon className="material-icons">check_circle</Icon>
+      <Message>UPLOAD COMPLETE</Message>
+    </ProgressWrapper>
+  </Progress>
+</CTAWrapper>
+```
+
+The progress bar:
+- Fills from left to right as upload progresses (0-100%)
+- Changes color to green when complete
+- Displays a checkmark and "UPLOAD COMPLETE" message at 100%
+
+<Tip>
+  The upload continues in the background even if you switch tabs, but avoid closing the browser until you see the success message.
+</Tip>
+
+## Form validation
+
+The platform validates all required fields before allowing submission:
+
+```jsx Validation logic
+const validateInputs = () => {
+  if (!chosenTags.length) setError('You must add at least one tag');
+  if (!description) setError('You must add a description for the video');
+  if (!title) setError('You must add a video title');
+  if (!username) setError('You must add your Discord username');
+  if (!video) setError('You must upload a video');
+  setTimeout(() => setError(''), 5000);
+  return video && username && title && description && chosenTags.length;
+};
+```
+
+Validation checks:
+- Video file is selected
+- Discord username is provided
+- Video title is provided
+- Description is provided
+- At least one tag is selected
+
+<Warning>
+  All fields are required. You'll see an error toast message if any required field is missing.
+</Warning>
+
+## Error handling
+
+The platform provides user-friendly error messages:
+
+```jsx Toast notification
+<Toast error={error} show={showSuccess} isError={error} />
+```
+
+Error messages appear for:
+- Missing required fields
+- Invalid file types (non-video files)
+- Upload failures
+
+Success messages appear when:
+- Upload completes successfully
+- Form is cleared and ready for new submission
+
+## Post-submission
+
+After successful upload:
+
+<Steps>
+  <Step title="Success confirmation">
+    A success toast appears confirming your submission was received
+  </Step>
+  
+  <Step title="Form reset">
+    The form automatically clears all fields, ready for another submission
+    
+    ```jsx Clear data
+    const clearData = () => {
+      setVideo(null);
+      setTitle('');
+      setUsername('');
+      setProgress(0);
+      setDescription('');
+      setChosenTags([]);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    };
+    ```
+  </Step>
+  
+  <Step title="Review process">
+    The BLACC team reviews your submission and may reach out via Discord if they have questions
+  </Step>
+  
+  <Step title="Publication">
+    Once approved, your video is uploaded to the official BLACC YouTube channel with full credit
+  </Step>
+</Steps>
+
+## Responsive layout
+
+The upload page uses a split-screen layout on desktop and stacks vertically on mobile:
+
+```jsx Responsive grid
+const Wrapper = styled.div`
+  height: 100%;
+  width: 100%;
+  overflow-y: scroll;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
+  align-items: center;
+  padding-bottom: 24px;
+`;
+```
+
+**Desktop**: Video upload area on left, form fields on right
+**Mobile**: Video upload area on top, form fields below
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Video quality" icon="video">
+    Upload videos in at least 720p resolution for best viewing experience
+  </Card>
+  <Card title="File size" icon="file">
+    Keep videos under 2GB for faster uploads. Consider compressing larger files
+  </Card>
+  <Card title="Content guidelines" icon="book">
+    Focus on technical content that helps other developers learn and grow
+  </Card>
+  <Card title="Descriptive titles" icon="heading">
+    Use clear, searchable titles that accurately describe your content
+  </Card>
+</CardGroup>
+
+## Related features
+
+<CardGroup cols={2}>
+  <Card title="Live events" icon="broadcast-tower" href="/features/live-events">
+    Watch live coding sessions for inspiration on content to create
+  </Card>
+  <Card title="Community hub" icon="users" href="/features/community">
+    Connect with other creators in the Discord community
+  </Card>
+</CardGroup>
